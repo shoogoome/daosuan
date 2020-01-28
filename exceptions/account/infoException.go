@@ -40,7 +40,7 @@ func VerificationFail() models.RestfulAPIResult {
 	return models.RestfulAPIResult{
 		Status: false,
 		ErrCode: 5303,
-		Message: "用户名或密码错误，请重新输入",
+		Message: "用户名或密码错误，或账号（电话、邮箱）未验证。请重新输入",
 	}
 }
 
