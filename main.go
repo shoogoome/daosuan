@@ -6,6 +6,7 @@ import (
 	"daosuan/models/db"
 	"daosuan/utils"
 	"daosuan/utils/middlewares"
+	"daosuan/views"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/hero"
@@ -13,7 +14,9 @@ import (
 )
 
 func initRouter(app *iris.Application) {
-	//views.RegisterAccountRouters(app)
+	views.RegisterAccountRouters(app)
+	views.RegisterTagRouters(app)
+	views.RegisterResourceRouters(app)
 }
 
 func main() {
