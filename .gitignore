@@ -1,0 +1,8 @@
+.idea
+/bin
+/data
+/vendor
+daosuan
+main
+go.sum
+config.yaml
