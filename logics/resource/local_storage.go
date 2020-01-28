@@ -2,6 +2,10 @@ package resourceLogic
 
 import (
 	"bytes"
+	"daosuan/constants"
+	"daosuan/exceptions/resource"
+	"daosuan/models"
+	"daosuan/utils/hash"
 	"encoding/json"
 	"fmt"
 	"github.com/kataras/iris"
@@ -11,10 +15,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"daosuan/constants"
-	"daosuan/exceptions/resource"
-	"daosuan/models"
-	"daosuan/utils/hash"
 	"regexp"
 	"strings"
 	"time"
@@ -26,25 +26,23 @@ type ResourcesLocalStorage interface {
 	DeleteAttachments(resources string, ids []interface{}) string
 }
 
-
 type resourcesLocalStorage struct {
 	Model string
-	root string
+	root  string
 }
 
 type tokenStruct struct {
-	ExpireAt int64 `json:"expire_at"`
-	AccountId int `json:"account_id"`
-	Path string `json:"path"`
-	Public bool `json:"public"`
-	FileName string `json:"file_name"`
+	ExpireAt  int64  `json:"expire_at"`
+	AccountId int    `json:"account_id"`
+	Path      string `json:"path"`
+	Public    bool   `json:"public"`
+	FileName  string `json:"file_name"`
 }
 
 type TokenOption struct {
-	FileName string
+	FileName   string
 	Encryption bool
 }
-
 
 func NewReousrcesLocalStorage(model string) ResourcesLocalStorage {
 	if _, ok := constants.StorageMapping[model]; !ok {
@@ -52,7 +50,7 @@ func NewReousrcesLocalStorage(model string) ResourcesLocalStorage {
 	}
 	return &resourcesLocalStorage{
 		Model: model,
-		root: constants.StorageMapping[model],
+		root:  constants.StorageMapping[model],
 	}
 }
 
@@ -102,7 +100,7 @@ func (r *resourcesLocalStorage) UploadAttachments(ctx iris.Context, resources st
 	filesList := ctx.Request().MultipartForm.File
 
 	fileId += 1
-	status := iris.Map {}
+	status := iris.Map{}
 	npath := fmt.Sprintf("%s/%d", r.root, _id)
 	exec.Command("mkdir", "-p", npath).Run()
 	for _, files := range filesList {
@@ -113,15 +111,15 @@ func (r *resourcesLocalStorage) UploadAttachments(ctx iris.Context, resources st
 				continue
 			}
 			// 去除超重文件
-			if file.Size > 1024 * 1024 * 10 {
+			if file.Size > 1024*1024*10 {
 				status[file.Filename] = 0
 				continue
 			}
 			// 文件重名处理
 			index := 1
 			fileNameSplit := strings.Split(file.Filename, ".")
-			fileNamePrefix := strings.Join(fileNameSplit[:len(fileNameSplit) - 1], "")
-			fileNameSuffix := fileNameSplit[len(fileNameSplit) - 1]
+			fileNamePrefix := strings.Join(fileNameSplit[:len(fileNameSplit)-1], "")
+			fileNameSuffix := fileNameSplit[len(fileNameSplit)-1]
 			newFileName := file.Filename
 			for stringIsExists(newFileName, fileNameList) {
 				newFileName = fmt.Sprintf("%s(%d).%s", fileNamePrefix, index, fileNameSuffix)
@@ -131,10 +129,10 @@ func (r *resourcesLocalStorage) UploadAttachments(ctx iris.Context, resources st
 			// 元数据记录
 			token := hash.GetRandomString(16)
 			dict = append(dict, models.FileFormat{
-				Id: fileId,
-				Name: newFileName,
-				Storage: fmt.Sprintf("storage://%s@%s", r.Model, fmt.Sprintf("%d/%s", _id, token)),
-				Size: file.Size,
+				Id:         fileId,
+				Name:       newFileName,
+				Storage:    fmt.Sprintf("storage://%s@%s", r.Model, fmt.Sprintf("%d/%s", _id, token)),
+				Size:       file.Size,
 				CreateTime: time.Now().Unix(),
 			})
 			fileId += 1
@@ -147,7 +145,6 @@ func (r *resourcesLocalStorage) UploadAttachments(ctx iris.Context, resources st
 	resourcesByte, _ := json.Marshal(&dict)
 	return string(resourcesByte), status
 }
-
 
 // 删除附件
 func (r *resourcesLocalStorage) DeleteAttachments(resources string, ids []interface{}) string {
@@ -177,7 +174,6 @@ func (r *resourcesLocalStorage) DeleteAttachments(resources string, ids []interf
 	return string(resource)
 }
 
-
 // 生成下载token
 func GenerateToken(path string, aid int, expire int64, option ...TokenOption) string {
 	if len(path) == 0 {
@@ -187,11 +183,11 @@ func GenerateToken(path string, aid int, expire int64, option ...TokenOption) st
 	if aid == -1 {
 		public = true
 	}
-	payload := tokenStruct {
-		ExpireAt: -1,
+	payload := tokenStruct{
+		ExpireAt:  -1,
 		AccountId: aid,
-		Path: path,
-		Public: public,
+		Path:      path,
+		Public:    public,
 	}
 	if len(option) > 0 {
 		payload.FileName = option[0].FileName
@@ -203,9 +199,8 @@ func GenerateToken(path string, aid int, expire int64, option ...TokenOption) st
 	return hash.GenerateToken(payload)
 }
 
-
 // 解析token
-func DecodeToken (token string, aid int) (string, string, string) {
+func DecodeToken(token string, aid int) (string, string, string) {
 	// 拦截解码方法报错，传递自身报错
 	defer func() {
 		if err := recover(); err != nil {
