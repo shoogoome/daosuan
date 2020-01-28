@@ -3,12 +3,12 @@ package hash
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"daosuan/utils"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"daosuan/utils"
 	"strings"
 	"time"
 )
@@ -88,8 +88,8 @@ func GetRandomString(l int) string {
 
 // 两数间随机
 func RandInt64(min, max int64) int64 {
-	if min >= max || min==0 || max==0{
+	if min >= max || min == 0 || max == 0 {
 		return max
 	}
-	return rand.Int63n(max-min)+min
+	return rand.Int63n(max-min) + min
 }
