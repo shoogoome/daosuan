@@ -3,6 +3,7 @@ package account
 import (
 	authbase "daosuan/core/auth"
 	accountException "daosuan/exceptions/account"
+	accountLogic "daosuan/logics/account"
 	"daosuan/models/db"
 	"daosuan/utils/hash"
 	paramsUtils "daosuan/utils/params"
@@ -17,15 +18,15 @@ func CommonLogin(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	var account db.Account
 	// function - 2 邮箱   - 1 电话
-	if function, err := ctx.URLParamInt("function"); err == nil && function == 2 {
+	if function, err := ctx.URLParamInt("function"); err == nil && function == 1 {
 		db.Driver.Where(
-			"password = ? and email = ? and email_validated = true",
+			"password = ? and phone = ? and phone_validated = true",
 			hash.PasswordSignature(params.Str("password", "密码")),
 			params.Str("key", "帐号"),
 		).First(&account)
 	} else {
 		db.Driver.Where(
-			"password = ? and phone = ? and phone_validated = true",
+			"password = ? and email = ? and email_validated = true",
 			hash.PasswordSignature(params.Str("password", "密码")),
 			params.Str("key", "帐号"),
 		).First(&account)
@@ -43,6 +44,7 @@ func CommonLogin(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	})
 }
 
+// 登出
 func Logout(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	auth.SetSession(0)
 	auth.SetCookie(0)
@@ -55,14 +57,15 @@ func Logout(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 func CheckLogin(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	if auth.IsLogin() {
+		logic := accountLogic.NewAccountLogic(auth)
+		logic.SetAccountModel(*auth.AccountModel())
 		ctx.JSON(iris.Map {
-			"id": auth.AccountModel().Id,
+			"account": logic.GetAccountInfo(),
 			"status": true,
 		})
 	} else {
 		ctx.JSON(iris.Map {
 			"status": false,
-			"id": nil,
 		})
 	}
 }

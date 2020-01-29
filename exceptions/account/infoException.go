@@ -59,3 +59,11 @@ func OldPasswordIsNotTrue() models.RestfulAPIResult {
 		Message: "旧密码错误",
 	}
 }
+
+func NicknameExists() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5306,
+		Message: "昵称存在",
+	}
+}

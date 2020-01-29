@@ -1,0 +1,75 @@
+package product
+
+import (
+	"daosuan/constants"
+	authbase "daosuan/core/auth"
+	"daosuan/core/cache"
+	"daosuan/exceptions/product"
+	productLogic "daosuan/logics/product"
+	"daosuan/models/db"
+	paramsUtils "daosuan/utils/params"
+	"github.com/kataras/iris"
+)
+
+// Star
+func Star(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int) {
+	auth.CheckLogin()
+	logic := productLogic.NewProductLogic(auth, pid)
+	if logic.IsStar() {
+		panic(productException.ReStar())
+	}
+
+	// 写入数据库
+	tx := db.Driver.Begin()
+	logic.ProductModel().Star += 1
+	if err := tx.Save(logic.ProductModel()).Error; err != nil {
+		tx.Rollback()
+		panic(productException.StarFail())
+	}
+
+	star := db.AccountStar{
+		AccountId: auth.AccountModel().Id,
+		ProductId: pid,
+	}
+	if err := tx.Create(&star).Error; err != nil {
+		tx.Rollback()
+		panic(productException.StarFail())
+	}
+	tx.Commit()
+
+	ctx.JSON(iris.Map {
+		"id": pid,
+	})
+}
+
+// 取消Star
+func CancelStar(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int) {
+	auth.CheckLogin()
+	logic := productLogic.NewProductLogic(auth, pid)
+	if !logic.IsStar() {
+		ctx.JSON(iris.Map {
+			"id": pid,
+		})
+		return
+	}
+
+	// 删除数据
+	tx := db.Driver.Begin()
+	logic.ProductModel().Star -= 1
+	if err := tx.Save(logic.ProductModel()).Error; err != nil {
+		tx.Rollback()
+		panic(productException.CancelStarFail())
+	}
+
+	if err := tx.Exec("delete from `account_star` where product_id = ? and account_id = ?", pid, auth.AccountModel().Id).Error; err != nil {
+		tx.Rollback()
+		panic(productException.CancelStarFail())
+	}
+	tx.Commit()
+
+	// 删除缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.StarModel, pid, auth.AccountModel().Id))
+	ctx.JSON(iris.Map {
+		"id": pid,
+	})
+}

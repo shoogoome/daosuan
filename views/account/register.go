@@ -16,11 +16,11 @@ func Register(ctx iris.Context) {
 	params := paramsUtils.NewParamsParser(data)
 
 	var account db.Account
-	username := params.Str("username", "用户名")
-	if len(username) < 6 || len(username) > 50 {
+	email := params.Str("email", "用户名")
+	if len(email) < 6 || len(email) > 50 {
 		panic(accountException.UsernameLengthIsNotStandard())
 	}
-	db.Driver.Where("username = ?", username).First(&account)
+	db.Driver.Where("email = ?", email).First(&account)
 	if account.Id != 0 {
 		panic(accountException.NicknameIsExists())
 	}
@@ -31,9 +31,8 @@ func Register(ctx iris.Context) {
 	}
 
 	account = db.Account{
-		Email: username,
+		Email: email,
 		Password: hash.PasswordSignature(password),
-		Nickname: username,
 		Role: int16(accountEnums.RoleUser),
 	}
 	db.Driver.Create(&account)

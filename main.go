@@ -17,6 +17,7 @@ func initRouter(app *iris.Application) {
 	views.RegisterAccountRouters(app)
 	views.RegisterTagRouters(app)
 	views.RegisterResourceRouters(app)
+	views.RegisterProductRouters(app)
 }
 
 func main() {

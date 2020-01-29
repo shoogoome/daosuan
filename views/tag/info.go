@@ -11,7 +11,7 @@ import (
 
 // 创建tag
 func CreateTag(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
-
+	auth.CheckLogin()
 	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
 
 	tag := db.Tag{

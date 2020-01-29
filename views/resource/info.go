@@ -40,7 +40,7 @@ func LocalDownload(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, tok
 	ctx.ResponseWriter().Header().Set("Content-Disposition", disposition.String())
 	ctx.ResponseWriter().Header().Set(
 		"X-Accel-Redirect",
-		path.Join(strings.Replace(fPath, constants.RasDataRoot, constants.NginxResourcePath, -1), fileName))
+		path.Join(strings.Replace(fPath, constants.DaoSuanDataRoot, constants.NginxResourcePath, -1), fileName))
 	defer func() {
 		if err := recover(); err != nil {
 			ctx.Text("找无该资源")

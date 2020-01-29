@@ -152,8 +152,7 @@ func (r *daosuanAuthAuthorization) SetCookie(aid int) {
 
 // 从数据库查找该用户
 func (r *daosuanAuthAuthorization) fetchAccount(aid int) bool {
-	table := db.Driver.Preload("Address")
-	err := db.Driver.GetOne("account", aid, &r.Account, table)
+	err := db.Driver.GetOne("account", aid, &r.Account)
 	if err != nil || r.Account.Id == 0 {
 		return false
 	}
@@ -166,5 +165,5 @@ func generateToken(aid int, expire int64) string {
 		AccountId:  aid,
 		ExpireTime: expire + time.Now().Unix(),
 	}
-	return hash.GenerateToken(payload)
+	return hash.GenerateToken(payload, true)
 }
