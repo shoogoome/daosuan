@@ -24,7 +24,7 @@ func RegisterProductRouters(app *iris.Application) {
 	productVersionRouter := app.Party("/products/{pid:int}/versions")
 	productVersionRouter.Post("", hero.Handler(product.CreateProductVersion))
 	productVersionRouter.Get("/check/version_name", hero.Handler(product.CheckVersionName))
-	productVersionRouter.Delete("/{vid:int}", hero.Handler(product.GetVersion))
+	productVersionRouter.Get("/{vid:int}", hero.Handler(product.GetVersion))
 	productVersionRouter.Put("/{vid:int}", hero.Handler(product.PutProductVersionInfo))
 	productVersionRouter.Delete("/{vid:int}", hero.Handler(product.DeleteVersion))
 	productVersionRouter.Get("/list", hero.Handler(product.GetProductVersionList))

@@ -13,8 +13,8 @@ type Product struct {
 	Name string `json:"name" gorm:"not null"`
 
 	// 用户id
+	Author Account `json:"author" gorm:"ForeignKey:AuthorId"`
 	AuthorId int `json:"author_id"`
-	Author Account `json:"-"`
 
 	// 描述
 	Description string `json:"description"`
@@ -37,6 +37,9 @@ type Product struct {
 	// 课程类型
 	Tag []Tag `json:"tag" gorm:"many2many:product_tags"`
 
+	// 主版本名
+	MasterVersion string `json:"master_version"`
+
 	// 创建时间
 	CreateTime int64 `json:"create_time"`
 
@@ -46,7 +49,7 @@ type Product struct {
 	// --------------------------------------------------
 
 	// 版本关联
-	Versions []ProductVersion `json:"version" gorm:"ForeignKey:ProductId"`
+	Versions []ProductVersion `json:"versions" gorm:"ForeignKey:ProductId"`
 
 }
 

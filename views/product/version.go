@@ -8,6 +8,7 @@ import (
 	"daosuan/models/db"
 	paramsUtils "daosuan/utils/params"
 	"encoding/json"
+	"fmt"
 	"github.com/goinggo/mapstructure"
 	"github.com/kataras/iris"
 )
@@ -17,18 +18,17 @@ func GetProductVersionList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorizat
 
 	logic := productLogic.NewProductLogic(auth, pid)
 	logic.LoadVersions()
+	product := logic.ProductModel()
 
-	list := make([]struct{
-		name string
-		id int
-	}, len(logic.ProductModel().Versions))
-	for index, version := range logic.ProductModel().Versions {
-		list[index] = struct {
-			name string
-			id   int
-		}{name: version.VersionName, id: version.Id}
+	l := make([]iris.Map, len(product.Versions))
+	fmt.Println(l)
+	for i := 0; i < len(product.Versions); i++ {
+		l[i] = iris.Map {
+			"name": product.Versions[i].VersionName,
+			"id": product.Versions[i].Id,
+		}
 	}
-	ctx.JSON(list)
+	ctx.JSON(l)
 }
 
 // 创建版本
@@ -41,17 +41,13 @@ func CreateProductVersion(ctx iris.Context, auth authbase.DaoSuanAuthAuthorizati
 	logic.CheckSelf()
 
 	var version db.ProductVersion
-	versionName := params.Str("version_name", "版本名称")
-	var t db.ProductVersion
-	if err := db.Driver.Where("product_id = ? and version_name = ?", pid, versionName).First(&t).Error; err != nil || t.Id != 0 {
-		panic(productException.ProductVersionNameIsExists())
-	}
 	// 版本克隆
 	if params.Has("version") {
 		var srcVersion db.ProductVersion
 		getVersion(pid, params.Int("version", "版本id"), &srcVersion)
-		version = srcVersion
-		version.VersionName = versionName
+		version.Details = srcVersion.Details
+		version.Additional = srcVersion.Additional
+		version.ProductId = srcVersion.ProductId
 	// 自行写入或者同当前展示分支
 	} else {
 		params.Diff(product)
@@ -71,6 +67,11 @@ func CreateProductVersion(ctx iris.Context, auth authbase.DaoSuanAuthAuthorizati
 			version.Additional = product.Additional
 		}
 	}
+	versionName := params.Str("version_name", "版本名称")
+	if logic.VersionIsExists(versionName) {
+		panic(productException.ProductVersionNameIsExists())
+	}
+	version.VersionName = versionName
 	db.Driver.Create(&version)
 	ctx.JSON(iris.Map {
 		"id": version.Id,
@@ -136,11 +137,13 @@ func SetMaster(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int
 	auth.CheckLogin()
 	logic := productLogic.NewProductLogic(auth, pid)
 	logic.CheckSelf()
+	product := logic.ProductModel()
 	var version db.ProductVersion
 	getVersion(pid, vid, &version)
-	logic.ProductModel().Details = version.Details
-	logic.ProductModel().Additional = version.Additional
-	db.Driver.Save(logic.ProductModel())
+	product.Details = version.Details
+	product.Additional = version.Additional
+	product.MasterVersion = version.VersionName
+	db.Driver.Save(&product)
 	ctx.JSON(iris.Map {
 		"id": pid,
 	})
@@ -149,10 +152,10 @@ func SetMaster(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int
 // 检查产品名是否存在
 func CheckVersionName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int) {
 	auth.CheckLogin()
-	nickname := ctx.URLParam("nickname")
+	name := ctx.URLParam("name")
 	logic := productLogic.NewProductLogic(auth, pid)
 	ctx.JSON(iris.Map {
-		"exists": logic.VersionIsExists(nickname),
+		"exists": logic.VersionIsExists(name),
 	})
 }
 

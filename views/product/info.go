@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/goinggo/mapstructure"
+	"github.com/jinzhu/gorm"
 	"github.com/kataras/iris"
 )
 
@@ -25,7 +26,9 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
 
 	var t db.Product
-	if err := db.Driver.Where("name = ?", params.Str("name", "名称")).First(&t).Error; err != nil || t.Id != 0 {
+	err := db.Driver.Where("name = ?", params.Str("name", "名称")).First(&t).Error
+	fmt.Println(err)
+	if err := db.Driver.Where("name = ?", params.Str("name", "名称")).First(&t).Error; err == nil && t.Id != 0 {
 		panic(productException.NameIsExist())
 	}
 	product := db.Product{
@@ -33,6 +36,7 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		AuthorId:    auth.AccountModel().Id,
 		Description: params.Str("description", "简介", ""),
 		Details:     params.Str("details", "详情页"),
+		MasterVersion: "v1.0.0",
 	}
 
 	putProductInfo(params, &product, true)
@@ -74,7 +78,21 @@ func PutProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 	product.Description = params.Str("description", "简介", "")
 	product.Details = params.Str("details", "详情页")
 
-	putProductInfo(params, &product, false)
+	tx := db.Driver.Begin()
+	putProductInfo(params, product, false, tx)
+	var version db.ProductVersion
+	if err := db.Driver.Where("product_id = ? and version_name = ?", pid, product.MasterVersion).First(&version).Error; err == nil {
+		version.Details = product.Details
+		version.Additional = product.Additional
+		if err := tx.Save(&version).Error; err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	} else {
+		tx.Rollback()
+	}
+
 	ctx.JSON(iris.Map{
 		"id": product.Id,
 	})
@@ -120,7 +138,7 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	table.Count(&count).Offset((page - 1) * limit).
 		Limit(limit).
-		Select("p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status").
+		Select("p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
 		Order("update_time desc").Find(&lists)
 	for i := 0; i < len(lists); i++ {
 		lists[i].Cover = resourceLogic.GenerateToken(lists[i].Cover, -1, constants.DaoSuanSessionExpires)
@@ -143,6 +161,7 @@ func MgetProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	var products []db.Product
 	db.Driver.Preload("Author").Table("product").Where("id in (?)", ids).Find(&products)
 	for _, product := range products {
+		db.Driver.Model(&product).Related(&product.Tag, "Tag")
 		logic.SetProductModel(product)
 		func(data *[]interface{}) {
 			*data = append(*data, logic.GetProductInfo())
@@ -158,15 +177,27 @@ func MgetProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 }
 
 // 修改产品信息
-func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create bool) {
+func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create bool, tx ...*gorm.DB) {
+	defer func() {
+		if err := recover(); err != nil {
+			if len(tx) > 0 {
+				tx[0].Rollback()
+			}
+			panic(err)
+		}
+	}()
+	d := db.Driver.DB
+	if len(tx) > 0 {
+		d = tx[0]
+	}
 	if params.Has("tag") {
 		tagIds := params.List("tag", "标签id列表")
 		var tags []db.Tag
-		db.Driver.Where("id in (?)", tagIds).Find(&tags)
+		d.Where("id in (?)", tagIds).Find(&tags)
 		product.Tag = tags
 	}
 
-	if params.Has("Status") {
+	if params.Has("status") {
 		statusEnum := productEnums.NewStatusEnums()
 		if statusEnum.Has(params.Int("status", "状态")) {
 			product.Status = int16(params.Int("status", "状态"))
@@ -185,7 +216,7 @@ func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create
 		}
 	}
 	if create {
-		if err := db.Driver.Create(&product).Error; err != nil {
+		if err := d.Create(&product).Error; err != nil {
 			panic(productException.ProductCreateFail())
 		}
 	}
@@ -193,10 +224,11 @@ func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create
 		logic := resourceLogic.NewReousrcesLocalStorage("product_cover")
 		product.Cover = logic.SaveFile(fmt.Sprintf("%d/%s", product.Id, "cover.jpg"), durl.DataUrlParser(params.Str("cover", "封面")), true)
 		if create {
-			db.Driver.Save(&product)
+			d.Save(&product)
 		}
 	}
+
 	if !create {
-		db.Driver.Save(&product)
+		d.Save(&product)
 	}
 }

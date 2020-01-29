@@ -11,16 +11,17 @@ import (
 	"daosuan/utils/hash"
 	paramsUtils "daosuan/utils/params"
 	"encoding/json"
+	"fmt"
 )
 
 var fields = []string{
 	"Name", "AuthorId", "Id", "Description", "Cover", "Details", "Additional",
-	"Status", "Tag", "CreateTime", "UpdateTime", "Star",
+	"Status", "Tag", "CreateTime", "UpdateTime", "Star", "MasterVersion",
 }
 
 type ProductLogic interface {
 	GetProductInfo() interface{}
-	ProductModel() db.Product
+	ProductModel() *db.Product
 	SetProductModel(product db.Product)
 	LoadVersions()
 	VersionIsExists(string) bool
@@ -40,6 +41,7 @@ func NewProductLogic(auth authbase.DaoSuanAuthAuthorization, pid ...int) Product
 		if err := db.Driver.GetOne("product", pid[0], &product, table); err != nil || product.Id == 0 {
 			panic(productException.ProductIsNotExists())
 		}
+		fmt.Println(product.Author)
 		db.Driver.Model(&product).Related(&(product.Tag), "Tag")
 	}
 	return &productStruct{
@@ -48,8 +50,8 @@ func NewProductLogic(auth authbase.DaoSuanAuthAuthorization, pid ...int) Product
 	}
 }
 
-func (p *productStruct) ProductModel() db.Product {
-	return p.product
+func (p *productStruct) ProductModel() *db.Product {
+	return &p.product
 }
 
 func (p *productStruct) SetProductModel(product db.Product) {
@@ -57,7 +59,7 @@ func (p *productStruct) SetProductModel(product db.Product) {
 }
 
 func (p *productStruct) LoadVersions() {
-	db.Driver.Model(&p.product).Related(&p.product.Versions, "Versions")
+	db.Driver.Model(&p.product).Related(&p.product.Versions)
 }
 
 func (p *productStruct) GetProductInfo() interface{} {

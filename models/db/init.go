@@ -45,9 +45,9 @@ Conn:
 	Driver.SingularTable(true)
 	Driver.AutoMigrate(
 		// 账户模块
-		&Account{},
+		&Account{}, &AccountStar{}, AccountFollow{},
 		// 产品模块
-		&Product{}, &Tag{},
+		&Product{}, &Tag{}, &ProductVersion{},
 	)
 }
 
@@ -138,7 +138,7 @@ func (d *driver) GetOne(table string, id int, target interface{}, db ...*gorm.DB
 	key := paramsUtils.CacheBuildKey(constants.DbModel, table, id)
 	object, err := cache.Dijan.Get(key)
 
-	if err == nil && object != "" {
+	if err == nil && len(object) > 0 {
 		err := json.Unmarshal([]byte(object), &target)
 		return err
 	}
@@ -169,11 +169,16 @@ func (d *driver) GetOne(table string, id int, target interface{}, db ...*gorm.DB
 }
 
 // 走缓存获取多条记录
-func (d *driver) GetMany(table string, ids []int, target []interface{}, db ...*gorm.DB) {
+func (d *driver) GetMany(table string, ids []interface{}, target []interface{}, db ...*gorm.DB) {
 	for _, id := range ids {
-		var data interface{}
-		if err := d.GetOne(table, id, &data, db...); err != nil {
-			target = append(target, data)
+		//var data interface{}
+		myValue := reflect.ValueOf(target)
+		myType := reflect.TypeOf(target)
+
+		x := reflect.New(myType)
+		x.Elem().Set(myValue)
+		if err := d.GetOne(table, id.(int), &x, db...); err != nil {
+			target = append(target, x)
 		}
 	}
 }

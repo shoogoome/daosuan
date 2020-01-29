@@ -15,10 +15,14 @@ import (
 func Following(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int) {
 	auth.CheckLogin()
 
+	if aid == auth.AccountModel().Id {
+		panic(accountException.FollowingFail())
+	}
+
 	var t db.AccountFollow
 	if err := db.Driver.Where("source_id = ? and target_id = ?", auth.AccountModel().Id, aid).First(&t).Error; err == nil && t.Id != 0 {
 		ctx.JSON(iris.Map {
-			"id": t,
+			"id": t.Id,
 		})
 		return
 	}
@@ -26,12 +30,12 @@ func Following(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int
 	logic := accountLogic.NewAccountLogic(auth, aid)
 	follow := db.AccountFollow{
 		SourceId: auth.AccountModel().Id,
-		Target: logic.AccountModel(),
+		Target: *logic.AccountModel(),
 	}
 	if err := db.Driver.Create(&follow).Error; err == nil {
 		// 清理缓存
-		cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.FollwingModel, auth.AccountModel().Id))
-		cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.FollwerModel, aid))
+		cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.FollowingModel, auth.AccountModel().Id))
+		cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.FollowerModel, aid))
 	} else {
 		panic(accountException.FollowingFail())
 	}
@@ -45,12 +49,16 @@ func Following(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int
 func CancelFollowing(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int) {
 	auth.CheckLogin()
 
+	if aid == auth.AccountModel().Id {
+		panic(accountException.CancelFollowingFail())
+	}
+
 	var t db.AccountFollow
 	if err := db.Driver.Where("source_id = ? and target_id = ?", auth.AccountModel().Id, aid).First(&t).Error; err == nil && t.Id != 0 {
 		if err := db.Driver.Delete(&t).Error; err == nil {
 			// 清理缓存
-			cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.FollwingModel, auth.AccountModel().Id))
-			cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.FollwerModel, aid))
+			cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.FollowingModel, auth.AccountModel().Id))
+			cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.FollowerModel, aid))
 		} else {
 			panic(accountException.CancelFollowingFail())
 		}

@@ -1,6 +1,5 @@
 package dto
 
-
 type ProductList struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
@@ -9,5 +8,5 @@ type ProductList struct {
 	Description string `json:"description"`
 	Cover       string `json:"cover"`
 	Status      int16  `json:"status"`
+	Star        int64  `json:"star"`
 }
-

@@ -20,7 +20,7 @@ var field = []string{
 
 type AccountLogic interface {
 	GetAccountInfo() interface{}
-	AccountModel() db.Account
+	AccountModel() *db.Account
 	SetAccountModel(account db.Account)
 	GetFollowers() []follow
 	GetFollowing() []follow
@@ -28,9 +28,9 @@ type AccountLogic interface {
 }
 
 type follow struct {
-	Id int
-	Nickname string
-	Motto string
+	Id       int    `json:"id"`
+	Nickname string `json:"nickname"`
+	Motto    string `json:"motto"`
 }
 
 type accountStruct struct {
@@ -58,15 +58,11 @@ func (a *accountStruct) SetAccountModel(account db.Account) {
 	a.account = account
 }
 
-func (a *accountStruct) AccountModel() db.Account {
-	return a.account
+func (a *accountStruct) AccountModel() *db.Account {
+	return &a.account
 }
 
 func (a *accountStruct) GetAccountInfo() interface{} {
-	// 卡权限
-	if !a.auth.IsAdmin() && a.auth.AccountModel().Id != a.account.Id {
-		panic(accountException.NoPermission())
-	}
 
 	if len(a.account.Avator) > 0 {
 		a.account.Avator = resourceLogic.GenerateToken(a.account.Avator, -1, constants.DaoSuanSessionExpires)
@@ -87,12 +83,12 @@ func (a *accountStruct) GetFollowing() []follow {
 
 	db.Driver.
 		Table("account_follow as f, account as a").
-		Where("f.source_id = ? and a.id = f.target_id").
+		Where("f.source_id = ? and a.id = f.target_id", a.account.Id).
 		Select("a.id, a.nickname, a.motto").
 		Find(&follow)
 	if payload, err := json.Marshal(follow); err == nil {
-		v := hash.RandInt64(240, 240 * 5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowingModel, a.account.Id), string(payload), int(v) * 60 * 60)
+		v := hash.RandInt64(240, 240*5)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowingModel, a.account.Id), string(payload), int(v)*60*60)
 	}
 	return follow
 }
@@ -109,12 +105,12 @@ func (a *accountStruct) GetFollowers() []follow {
 
 	db.Driver.
 		Table("account_follow as f, account as a").
-		Where("f.target_id = ? and a.id = f.source_id").
+		Where("f.target_id = ? and a.id = f.source_id", a.account.Id).
 		Select("a.id, a.nickname, a.motto").
-		Order("f.create_time desc").Find(&follow)
+		Find(&follow)
 	if payload, err := json.Marshal(follow); err == nil {
-		v := hash.RandInt64(240, 240 * 5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowerModel, a.account.Id), string(payload), int(v) * 60 * 60)
+		v := hash.RandInt64(240, 240*5)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowerModel, a.account.Id), string(payload), int(v)*60*60)
 	}
 	return follow
 }
@@ -132,15 +128,14 @@ func (a *accountStruct) GetStars() []dto.ProductList {
 	db.Driver.
 		Table("account_star as s, product as p").
 		Where("s.account_id = ? and p.id = s.product_id", a.account.Id).
-		Select("p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status").
+		Select("p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
 		Order("s.create_time desc").Find(&stars)
 	if payload, err := json.Marshal(stars); err == nil {
-		v := hash.RandInt64(240, 240 * 5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.AccountStarModel, a.account.Id), string(payload), int(v) * 60 * 60)
+		v := hash.RandInt64(240, 240*5)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.AccountStarModel, a.account.Id), string(payload), int(v)*60*60)
 	}
 	return stars
 }
-
 
 // 检测昵称是否存在
 func IsNicknameExists(nickname string, aid ...int) bool {
@@ -159,6 +154,6 @@ func IsNicknameExists(nickname string, aid ...int) bool {
 		}
 	}
 	v := hash.RandInt64(240, 240*5)
-	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.NicknameModel, nickname), nickname, int(v) * 60 * 60)
+	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.NicknameModel, nickname), nickname, int(v)*60*60)
 	return true
 }
