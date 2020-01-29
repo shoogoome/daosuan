@@ -36,12 +36,6 @@ type Account struct {
 	// 一句话签名
 	Motto string `json:"motto"`
 
-	// 真实姓名
-	Realname string `json:"realname"`
-
-	// 身份证
-	IdCode string `json:"id_code"`
-
 	// 设置 保留字段
 	Options string `json:"options" gorm:"default:''"`
 
@@ -52,4 +46,31 @@ type Account struct {
 	UpdateTime int64 `json:"update_time"`
 
 	// ----------------------------------------
+}
+
+// 用户点赞关联表
+type AccountStar struct {
+	Id        int `gorm:"primary_key" json:"id"`
+
+	AccountId int `json:"account_id" `
+	Account Account `json:"-" gorm:"ForeignKey:AccountId"`
+
+	ProductId int `json:"product_id"`
+	Product Product `json:"-" gorm:"ForeignKey:ProductId"`
+
+	CreateTime int64 `json:"create_time"`
+}
+
+// 用户关注关联表
+type AccountFollow struct {
+
+	Id        int `gorm:"primary_key" json:"id"`
+
+	SourceId int `json:"source_id"`
+	Source Account `json:"source" gorm:"ForeignKey:SourceId"`
+
+	TargetId int `json:"target_id"`
+	Target Account `json:"target" gorm:"ForeignKey:TargetId"`
+
+	CreateTime int64 `json:"create_time"`
 }
