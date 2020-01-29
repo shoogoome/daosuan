@@ -2,6 +2,7 @@ package account
 
 import (
 	authbase "daosuan/core/auth"
+	"daosuan/enums/account"
 	accountException "daosuan/exceptions/account"
 	accountLogic "daosuan/logics/account"
 	resourceLogic "daosuan/logics/resource"
@@ -15,8 +16,6 @@ import (
 
 // 获取用户信息
 func GetAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int) {
-	auth.CheckLogin()
-
 	logic := accountLogic.NewAccountLogic(auth, aid)
 	ctx.JSON(logic.GetAccountInfo())
 }
@@ -38,12 +37,7 @@ func GetAccountList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	// 条件过滤
 	if key := ctx.URLParam("key");len(key) > 0 {
 		keyString := fmt.Sprintf("%%%s%%", key)
-		table = table.Where(
-			"nickname like ? or email like ? or realname like ?",
-			keyString, keyString, keyString)
-	}
-	if idCode, err := ctx.URLParamBool("id_code"); err == nil {
-		table = table.Where("id_code = ?", idCode)
+		table = table.Where("nickname like ? or email like ?", keyString, keyString)
 	}
 
 	table.Count(&count).Offset((page - 1) * limit).Limit(limit).Select("id, update_time").Find(&lists)
@@ -57,7 +51,6 @@ func GetAccountList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 // 批量获取信息
 func MgetAccountInfo(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
-	auth.CheckLogin()
 	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
 	logic := accountLogic.NewAccountLogic(auth)
 
@@ -84,19 +77,27 @@ func MgetAccountInfo(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 // 修改用户信息
 func PutAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int) {
 	auth.CheckLogin()
-	data := paramsUtils.RequestJsonInterface(ctx)
-	params := paramsUtils.NewParamsParser(data)
+	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
 	logic := accountLogic.NewAccountLogic(auth, aid)
 	account := logic.AccountModel()
 
+	if !auth.IsAdmin() && account.Id != auth.AccountModel().Id {
+		panic(accountException.NoPermission())
+	}
+
 	params.Diff(account)
 	account.Nickname = params.Str("nickname", "昵称")
+	// 检测昵称存在情况
+	if accountLogic.IsNicknameExists(account.Nickname, account.Id) {
+		panic(accountException.NicknameExists())
+	}
 	account.Motto = params.Str("motto", "一句话签名")
-	account.Realname = params.Str("realname", "真实姓名")
-	account.IdCode = params.Str("id_code", "身份证")
 
 	if params.Has("role") && auth.IsAdmin() {
-		account.Role = int16(params.Int("role", "角色"))
+		accountEnum := accountEnums.NewRoleEnums()
+		if accountEnum.Has(params.Int("role", "角色")) {
+			account.Role = int16(params.Int("role", "角色"))
+		}
 	}
 
 	if params.Has("new_password") {
@@ -108,11 +109,6 @@ func PutAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid in
 			}
 		}
 		account.Password = hash.PasswordSignature(newPassword)
-	}
-	// TODO: 特殊字段处理
-
-	if params.Has("id_code") {
-		// TODO: 身份证验证
 	}
 
 	if params.Has("avator") {
@@ -126,5 +122,14 @@ func PutAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid in
 	})
 }
 
+// 检测昵称存在与否
+func CheckNicknameExists(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
+	auth.CheckLogin()
+
+	nickname := ctx.URLParam("nickname")
+	ctx.JSON(iris.Map {
+		"exists": accountLogic.IsNicknameExists(nickname),
+	})
+}
 
 
