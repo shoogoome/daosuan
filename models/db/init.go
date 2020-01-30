@@ -169,16 +169,18 @@ func (d *driver) GetOne(table string, id int, target interface{}, db ...*gorm.DB
 }
 
 // 走缓存获取多条记录
-func (d *driver) GetMany(table string, ids []interface{}, target []interface{}, db ...*gorm.DB) {
+func (d *driver) GetMany(table string, ids []interface{}, target interface{}, data []interface{}, db ...*gorm.DB) {
+	myValue := reflect.ValueOf(target)
+	myType := reflect.TypeOf(target)
+
+	//var data = make([]interface{}, 0, len(ids))
+
 	for _, id := range ids {
-		//var data interface{}
-		myValue := reflect.ValueOf(target)
-		myType := reflect.TypeOf(target)
 
 		x := reflect.New(myType)
 		x.Elem().Set(myValue)
-		if err := d.GetOne(table, id.(int), &x, db...); err != nil {
-			target = append(target, x)
+		if err := d.GetOne(table, int(id.(float64)), &x, db...); err != nil {
+			data = append(data, x)
 		}
 	}
 }
