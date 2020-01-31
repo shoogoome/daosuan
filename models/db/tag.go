@@ -9,7 +9,7 @@ type Tag struct {
 	Name string `json:"name" gorm:"not null"`
 
 	// 创建时间
-	CreateTime int64 `json:"create_time"`
+	CreateTime int64 `json:"-"`
 
 	// 产品关联
 	Products []Product `json:"-"`

@@ -3,6 +3,7 @@ package account
 import (
 	accountEnums "daosuan/enums/account"
 	accountException "daosuan/exceptions/account"
+	accountLogic "daosuan/logics/account"
 	"daosuan/models/db"
 	"daosuan/utils/hash"
 	paramsUtils "daosuan/utils/params"
@@ -16,6 +17,7 @@ func Register(ctx iris.Context) {
 	params := paramsUtils.NewParamsParser(data)
 
 	var account db.Account
+
 	email := params.Str("email", "用户名")
 	if len(email) < 6 || len(email) > 50 {
 		panic(accountException.UsernameLengthIsNotStandard())
@@ -29,7 +31,10 @@ func Register(ctx iris.Context) {
 	if len(password) < 8 && len(password) > 32 {
 		panic(accountException.PasswordLengthIsNotStandard())
 	}
-
+	nickname := params.Str("nickname", "昵称")
+	if accountLogic.IsNicknameExists(nickname) {
+		panic(accountException.NicknameIsExists())
+	}
 	account = db.Account{
 		Email: email,
 		Password: hash.PasswordSignature(password),

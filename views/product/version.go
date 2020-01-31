@@ -150,9 +150,8 @@ func SetMaster(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int
 }
 
 // 检查产品名是否存在
-func CheckVersionName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int) {
+func CheckVersionName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int, name string) {
 	auth.CheckLogin()
-	name := ctx.URLParam("name")
 	logic := productLogic.NewProductLogic(auth, pid)
 	ctx.JSON(iris.Map {
 		"exists": logic.VersionIsExists(name),

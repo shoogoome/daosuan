@@ -41,7 +41,7 @@ func Following(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int
 	}
 
 	ctx.JSON(iris.Map {
-		"id": follow.Id,
+		"id": aid,
 	})
 }
 

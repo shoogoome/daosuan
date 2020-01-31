@@ -114,3 +114,24 @@ func (p *productStruct) IsStar() bool {
 	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.StarModel, p.product.Id, p.auth.AccountModel().Id), "star", int(v) * 60 * 60)
 	return true
 }
+
+// 检测产品名是否存在
+func IskNameExists(name string, pid ...int) bool {
+	if name, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductNameModel, name)); err == nil && name != "" {
+		return true
+	}
+
+	var t db.Product
+	if len(pid) > 0 {
+		if err := db.Driver.Where("name = ? and id != ?", name, pid[0]).First(&t).Error; err != nil || t.Id == 0 {
+			return false
+		}
+	} else {
+		if err := db.Driver.Where("name = ?", name).First(&t).Error; err != nil || t.Id == 0 {
+			return false
+		}
+	}
+	v := hash.RandInt64(240, 240*5)
+	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductNameModel, name), name, int(v)*60*60)
+	return true
+}

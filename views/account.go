@@ -23,7 +23,7 @@ func RegisterAccountRouters(app *iris.Application) {
 	accountRouter.Put("/{aid:int}", hero.Handler(account.PutAccount))
 	accountRouter.Get("/{aid:int}/dashboard", hero.Handler(account.Dashboard))
 	accountRouter.Get("/check/login", hero.Handler(account.CheckLogin))
-	accountRouter.Get("/check/nickname", hero.Handler(account.CheckNicknameExists))
+	accountRouter.Get("/check/nickname/{name:string}", hero.Handler(account.CheckNicknameExists))
 
 	accountRouter.Get("/{aid:int}/follow", hero.Handler(account.Following))
 	accountRouter.Get("/{aid:int}/cancel_follow", hero.Handler(account.CancelFollowing))

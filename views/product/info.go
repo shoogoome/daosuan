@@ -25,10 +25,7 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
 
-	var t db.Product
-	err := db.Driver.Where("name = ?", params.Str("name", "名称")).First(&t).Error
-	fmt.Println(err)
-	if err := db.Driver.Where("name = ?", params.Str("name", "名称")).First(&t).Error; err == nil && t.Id != 0 {
+	if productLogic.IskNameExists(params.Str("name", "名称")) {
 		panic(productException.NameIsExist())
 	}
 	product := db.Product{
@@ -74,7 +71,11 @@ func PutProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 
 	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
 	params.Diff(product)
-	product.Name = params.Str("name", "名称")
+	name := params.Str("name", "名称")
+	if productLogic.IskNameExists(name, product.Id) {
+		panic(productException.NameIsExist())
+	}
+	product.Name = name
 	product.Description = params.Str("description", "简介", "")
 	product.Details = params.Str("details", "详情页")
 
@@ -135,6 +136,9 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		nameString := fmt.Sprintf("%%%s%%", name)
 		table = table.Where("name like ?", nameString)
 	}
+	if author, err := ctx.URLParamInt("author_id"); err == nil {
+		table = table.Where("author_id = ?", author)
+	}
 
 	table.Count(&count).Offset((page - 1) * limit).
 		Limit(limit).
@@ -175,6 +179,15 @@ func MgetProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	}
 	ctx.JSON(data)
 }
+
+// 检测产品名是否存在
+func CheckName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, name string) {
+	auth.CheckLogin()
+	ctx.JSON(iris.Map {
+		"status": productLogic.IskNameExists(name),
+	})
+}
+
 
 // 修改产品信息
 func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create bool, tx ...*gorm.DB) {

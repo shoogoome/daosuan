@@ -27,6 +27,8 @@ func GetAccountList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	var lists []struct{
 		Id int `json:"id"`
 		UpdateTime int64 `json:"update_time"`
+		Role int16 `json:"role"`
+		Nickname string `json:"nickname"`
 	}
 	var count int
 	table := db.Driver.Table("account")
@@ -40,7 +42,7 @@ func GetAccountList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		table = table.Where("nickname like ? or email like ?", keyString, keyString)
 	}
 
-	table.Count(&count).Offset((page - 1) * limit).Limit(limit).Select("id, update_time").Find(&lists)
+	table.Count(&count).Offset((page - 1) * limit).Limit(limit).Select("id, nickname, update_time, role").Find(&lists)
 	ctx.JSON(iris.Map {
 		"accounts": lists,
 		"total": count,
@@ -123,12 +125,9 @@ func PutAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid in
 }
 
 // 检测昵称存在与否
-func CheckNicknameExists(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
-	auth.CheckLogin()
-
-	nickname := ctx.URLParam("nickname")
+func CheckNicknameExists(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, name string) {
 	ctx.JSON(iris.Map {
-		"exists": accountLogic.IsNicknameExists(nickname),
+		"exists": accountLogic.IsNicknameExists(name),
 	})
 }
 

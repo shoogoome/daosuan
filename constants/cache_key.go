@@ -20,4 +20,7 @@ const (
 	// 点赞缓存键
 	StarModel = "product:star"
 
+	// 产品名缓存键
+	ProductNameModel = "product:name"
+
 )

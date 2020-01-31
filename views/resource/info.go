@@ -35,7 +35,7 @@ func LocalDownload(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, tok
 	if !ok {
 		mime = "application/octet-stream"
 	}
-	ctx.ResponseWriter().Header().Set("Via", "ras")
+	ctx.ResponseWriter().Header().Set("Via", "daosuan")
 	ctx.ResponseWriter().Header().Set("Content-type", mime)
 	ctx.ResponseWriter().Header().Set("Content-Disposition", disposition.String())
 	ctx.ResponseWriter().Header().Set(
