@@ -34,6 +34,7 @@ func Register(ctx iris.Context) {
 		Email: email,
 		Password: hash.PasswordSignature(password),
 		Role: int16(accountEnums.RoleUser),
+		EmailValidated: true, // 后续改
 	}
 	db.Driver.Create(&account)
 	ctx.JSON(iris.Map{
