@@ -118,22 +118,12 @@ func (a *accountStruct) GetFollowers() []follow {
 func (a *accountStruct) GetStars() []dto.ProductList {
 
 	var stars []dto.ProductList
-	// 读取缓存
-	if payload, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.AccountStarModel, a.account.Id)); err == nil {
-		if err = json.Unmarshal([]byte(payload), &stars); err == nil {
-			return stars
-		}
-	}
-
 	db.Driver.
 		Table("account_star as s, product as p").
 		Where("s.account_id = ? and p.id = s.product_id", a.account.Id).
 		Select("p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
 		Order("s.create_time desc").Find(&stars)
-	if payload, err := json.Marshal(stars); err == nil {
-		v := hash.RandInt64(240, 240*5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.AccountStarModel, a.account.Id), string(payload), int(v)*60*60)
-	}
+	// star产品状态需实时，不适合缓存
 	return stars
 }
 

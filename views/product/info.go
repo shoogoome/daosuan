@@ -54,7 +54,7 @@ func GetProductInfo(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pi
 
 	logic := productLogic.NewProductLogic(auth, pid)
 	if !auth.IsAdmin() && logic.ProductModel().AuthorId != auth.AccountModel().Id && logic.ProductModel().Status != productEnums.StatusReleased {
-		panic(productException.NoPermission())
+		panic(productException.ProductIsNotExists())
 	}
 
 	ctx.JSON(logic.GetProductInfo())
@@ -165,6 +165,10 @@ func MgetProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	var products []db.Product
 	db.Driver.Preload("Author").Table("product").Where("id in (?)", ids).Find(&products)
 	for _, product := range products {
+		// 跳过非发布产品
+		if product.Status != productEnums.StatusReleased {
+			continue
+		}
 		db.Driver.Model(&product).Related(&product.Tag, "Tag")
 		logic.SetProductModel(product)
 		func(data *[]interface{}) {
@@ -187,7 +191,6 @@ func CheckName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, name st
 		"status": productLogic.IskNameExists(name),
 	})
 }
-
 
 // 修改产品信息
 func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create bool, tx ...*gorm.DB) {
