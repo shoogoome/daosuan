@@ -12,4 +12,5 @@ func RegisterResourceRouters(app *iris.Application) {
 	resourceRouter := app.Party("/resources")
 
 	resourceRouter.Get("/{token:string}", hero.Handler(resource.LocalDownload))
+	resourceRouter.Get("/qiniu/upload_token", hero.Handler(resource.GetQiNiuUploadToken))
 }
