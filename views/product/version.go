@@ -1,34 +1,23 @@
 package product
 
 import (
+	"daosuan/constants"
 	"daosuan/core/auth"
+	"daosuan/core/cache"
 	"daosuan/entity"
 	productException "daosuan/exceptions/product"
 	"daosuan/logics/product"
 	"daosuan/models/db"
 	paramsUtils "daosuan/utils/params"
 	"encoding/json"
-	"fmt"
 	"github.com/goinggo/mapstructure"
 	"github.com/kataras/iris"
 )
 
 // 获取版本名称列表
 func GetProductVersionList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int) {
-
 	logic := productLogic.NewProductLogic(auth, pid)
-	logic.LoadVersions()
-	product := logic.ProductModel()
-
-	l := make([]iris.Map, len(product.Versions))
-	fmt.Println(l)
-	for i := 0; i < len(product.Versions); i++ {
-		l[i] = iris.Map {
-			"name": product.Versions[i].VersionName,
-			"id": product.Versions[i].Id,
-		}
-	}
-	ctx.JSON(l)
+	ctx.JSON(logic.GetVersionInfo())
 }
 
 // 创建版本
@@ -50,7 +39,7 @@ func CreateProductVersion(ctx iris.Context, auth authbase.DaoSuanAuthAuthorizati
 		version.ProductId = srcVersion.ProductId
 	// 自行写入或者同当前展示分支
 	} else {
-		params.Diff(product)
+		params.Diff(*product)
 		version = db.ProductVersion{
 			ProductId: product.Id,
 			Details: params.Str("details", "详情页"),
@@ -73,6 +62,8 @@ func CreateProductVersion(ctx iris.Context, auth authbase.DaoSuanAuthAuthorizati
 	}
 	version.VersionName = versionName
 	db.Driver.Create(&version)
+	// 删除缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, product.Id))
 	ctx.JSON(iris.Map {
 		"id": version.Id,
 	})
@@ -113,6 +104,8 @@ func DeleteVersion(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid
 	var version db.ProductVersion
 	getVersion(pid, vid, &version)
 	db.Driver.Delete(version)
+	// 删除缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, pid))
 	ctx.JSON(iris.Map {
 		"id": vid,
 	})

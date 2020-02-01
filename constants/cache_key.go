@@ -23,4 +23,10 @@ const (
 	// 产品名缓存键
 	ProductNameModel = "product:name"
 
+	// 产品版本信息缓存键
+	ProductVersionInfoModel = "product:version_info"
+
+	// 产品审核信息缓存键
+	ProductExamineRecordModel = "product:examine_record"
+
 )

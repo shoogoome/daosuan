@@ -2,7 +2,7 @@ package enumsbase
 
 
 type EnumBaseInterface interface {
-	Has(int) bool
+	Has(int, ...int) bool
 	Mixin(...int) int
 }
 
@@ -10,8 +10,13 @@ type EnumBase struct {
 	Enums []int
 }
 
-func (e EnumBase) Has(enum int) bool {
-	mixin := e.Mixin(e.Enums...)
+func (e EnumBase) Has(enum int, enums ...int) bool {
+	var mixin int
+	if len(enums) > 0 {
+		mixin = e.Mixin(enums...)
+	} else {
+		mixin = e.Mixin(e.Enums...)
+	}
 	if mixin & enum == enum {
 		return true
 	}

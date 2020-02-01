@@ -47,7 +47,7 @@ Conn:
 		// 账户模块
 		&Account{}, &AccountStar{}, AccountFollow{},
 		// 产品模块
-		&Product{}, &Tag{}, &ProductVersion{},
+		&Product{}, &Tag{}, &ProductVersion{}, &ProductExamineRecord{},
 	)
 }
 

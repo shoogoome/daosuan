@@ -6,15 +6,14 @@ import (
 
 // 产品表
 type Product struct {
-
-	Id        int `gorm:"primary_key" json:"id"`
+	Id int `gorm:"primary_key" json:"id"`
 
 	// 名称
 	Name string `json:"name" gorm:"not null"`
 
 	// 用户id
-	Author Account `json:"author" gorm:"ForeignKey:AuthorId"`
-	AuthorId int `json:"author_id"`
+	Author   Account `json:"author" gorm:"ForeignKey:AuthorId"`
+	AuthorId int     `json:"author_id"`
 
 	// 描述
 	Description string `json:"description"`
@@ -50,13 +49,11 @@ type Product struct {
 
 	// 版本关联
 	Versions []ProductVersion `json:"versions" gorm:"ForeignKey:ProductId"`
-
 }
 
 // 产品版本表
 type ProductVersion struct {
-
-	Id        int `gorm:"primary_key" json:"id"`
+	Id int `gorm:"primary_key" json:"id"`
 
 	// 产品关联
 	ProductId int `json:"-"`
@@ -75,4 +72,21 @@ type ProductVersion struct {
 
 	// 更新时间
 	UpdateTime int64 `json:"update_time"`
+}
+
+// 产品审核记录表
+type ProductExamineRecord struct {
+	Id int `gorm:"primary_key" json:"id"`
+
+	// 产品关联
+	ProductId int `json:"-"`
+
+	// 通过与否
+	Adopt bool `json:"adopt"`
+
+	// 回复
+	Reply string `json:"reply"`
+
+	// 创建时间
+	CreateTime int64 `json:"create_time"`
 }

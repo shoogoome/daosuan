@@ -11,7 +11,7 @@ import (
 	"daosuan/utils/hash"
 	paramsUtils "daosuan/utils/params"
 	"encoding/json"
-	"fmt"
+	"github.com/kataras/iris"
 )
 
 var fields = []string{
@@ -27,6 +27,8 @@ type ProductLogic interface {
 	VersionIsExists(string) bool
 	CheckSelf()
 	IsStar() bool
+	GetExamineRecord() []db.ProductExamineRecord
+	GetVersionInfo() []iris.Map
 }
 
 type productStruct struct {
@@ -41,7 +43,6 @@ func NewProductLogic(auth authbase.DaoSuanAuthAuthorization, pid ...int) Product
 		if err := db.Driver.GetOne("product", pid[0], &product, table); err != nil || product.Id == 0 {
 			panic(productException.ProductIsNotExists())
 		}
-		fmt.Println(product.Author)
 		db.Driver.Model(&product).Related(&(product.Tag), "Tag")
 	}
 	return &productStruct{
@@ -113,6 +114,49 @@ func (p *productStruct) IsStar() bool {
 	v := hash.RandInt64(240, 240 * 5)
 	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.StarModel, p.product.Id, p.auth.AccountModel().Id), "star", int(v) * 60 * 60)
 	return true
+}
+
+// 获取产品审核信息列表
+func (p *productStruct) GetExamineRecord() []db.ProductExamineRecord {
+	var result []db.ProductExamineRecord
+	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.ProductModel().Id)); err == nil {
+		if err := json.Unmarshal([]byte(r), &result); err == nil {
+			return result
+		}
+	}
+
+	db.Driver.Where("product_id = ?", p.ProductModel().Id).Order("-create_time").Find(&result)
+	if r, err := json.Marshal(&result); err == nil {
+		v := hash.RandInt64(240, 240 * 5)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.ProductModel().Id), string(r), int(v) * 60 * 60)
+	}
+	return result
+}
+
+// 获取产品版本信息列表
+func (p *productStruct) GetVersionInfo() []iris.Map {
+
+	var result []iris.Map
+	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.ProductModel().Id)); err == nil {
+		if err := json.Unmarshal([]byte(r), &result); err == nil {
+			return result
+		}
+	}
+	p.LoadVersions()
+	product := p.ProductModel()
+
+	l := make([]iris.Map, len(product.Versions))
+	for i := 0; i < len(product.Versions); i++ {
+		l[i] = iris.Map {
+			"name": product.Versions[i].VersionName,
+			"id": product.Versions[i].Id,
+		}
+	}
+	if r, err := json.Marshal(&result); err == nil {
+		v := hash.RandInt64(240, 240 * 5)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.ProductModel().Id), string(r), int(v) * 60 * 60)
+	}
+	return result
 }
 
 // 检测产品名是否存在

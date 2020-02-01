@@ -87,7 +87,7 @@ func PutAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid in
 		panic(accountException.NoPermission())
 	}
 
-	params.Diff(account)
+	params.Diff(*account)
 	account.Nickname = params.Str("nickname", "昵称")
 	// 检测昵称存在情况
 	if accountLogic.IsNicknameExists(account.Nickname, account.Id) {

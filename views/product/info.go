@@ -36,7 +36,7 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		MasterVersion: "v1.0.0",
 	}
 
-	putProductInfo(params, &product, true)
+	putProductInfo(auth, params, &product, true)
 	version := db.ProductVersion{
 		ProductId: product.Id,
 		Details: product.Details,
@@ -70,7 +70,7 @@ func PutProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 	}
 
 	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
-	params.Diff(product)
+	params.Diff(*product)
 	name := params.Str("name", "名称")
 	if productLogic.IskNameExists(name, product.Id) {
 		panic(productException.NameIsExist())
@@ -80,7 +80,7 @@ func PutProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 	product.Details = params.Str("details", "详情页")
 
 	tx := db.Driver.Begin()
-	putProductInfo(params, product, false, tx)
+	putProductInfo(auth, params, product, false, tx)
 	var version db.ProductVersion
 	if err := db.Driver.Where("product_id = ? and version_name = ?", pid, product.MasterVersion).First(&version).Error; err == nil {
 		version.Details = product.Details
@@ -122,9 +122,11 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	var lists []dto.ProductList
 	var count int
 	table := db.Driver.Table("product as p")
+	// 可看自己产品的所有状态产品列表
 	if me, err := ctx.URLParamBool("me"); err == nil && me {
 		table = table.Where("p.author_id = ?", auth.AccountModel().Id)
-	} else {
+	// 非系统管理员则只能看发布状态的产品列表
+	} else if !auth.IsAdmin() {
 		table = table.Where("p.status = ?", productEnums.StatusReleased)
 	}
 	limit := ctx.URLParamIntDefault("limit", 10)
@@ -138,6 +140,9 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	}
 	if author, err := ctx.URLParamInt("author_id"); err == nil {
 		table = table.Where("author_id = ?", author)
+	}
+	if status, err := ctx.URLParamInt("status"); err == nil && auth.IsAdmin() {
+		table = table.Where("status = ?", status)
 	}
 
 	table.Count(&count).Offset((page - 1) * limit).
@@ -193,7 +198,7 @@ func CheckName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, name st
 }
 
 // 修改产品信息
-func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create bool, tx ...*gorm.DB) {
+func putProductInfo(auth authbase.DaoSuanAuthAuthorization, params paramsUtils.ParamsParser, product *db.Product, create bool, tx ...*gorm.DB) {
 	defer func() {
 		if err := recover(); err != nil {
 			if len(tx) > 0 {
@@ -215,7 +220,9 @@ func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create
 
 	if params.Has("status") {
 		statusEnum := productEnums.NewStatusEnums()
-		if statusEnum.Has(params.Int("status", "状态")) {
+		status := params.Int("status", "状态")
+		// 该方法不提供修改状态为发布
+		if statusEnum.Has(status, productEnums.StatusDraft, productEnums.StatusLowerShelf, productEnums.StatusExamine) {
 			product.Status = int16(params.Int("status", "状态"))
 		}
 	} else {

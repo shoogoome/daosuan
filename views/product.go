@@ -20,6 +20,8 @@ func RegisterProductRouters(app *iris.Application) {
 	productRouter.Get("/{pid:int}/star", hero.Handler(product.Star))
 	productRouter.Get("/{pid:int}/cancel_star", hero.Handler(product.CancelStar))
 	productRouter.Get("/check/name/{name:string}", hero.Handler(product.CheckName))
+	productRouter.Post("/{pid:int}/examine", hero.Handler(product.Examine))
+	productRouter.Get("/{pid:int}/examine", hero.Handler(product.GetExamineInfo))
 
 	// 账户版本路由
 	productVersionRouter := app.Party("/products/{pid:int}/versions")
@@ -30,6 +32,8 @@ func RegisterProductRouters(app *iris.Application) {
 	productVersionRouter.Delete("/{vid:int}", hero.Handler(product.DeleteVersion))
 	productVersionRouter.Get("/list", hero.Handler(product.GetProductVersionList))
 	productVersionRouter.Get("/{vid:int}/set/master", hero.Handler(product.SetMaster))
+
+
 
 }
 
