@@ -112,7 +112,7 @@ func (p *productStruct) IsStar() bool {
 		return false
 	}
 	v := hash.RandInt64(240, 240 * 5)
-	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.StarModel, p.product.Id, p.auth.AccountModel().Id), "star", int(v) * 60 * 60)
+	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.StarModel, p.product.Id, p.auth.AccountModel().Id), []byte("star"), int(v) * 60 * 60)
 	return true
 }
 
@@ -120,7 +120,7 @@ func (p *productStruct) IsStar() bool {
 func (p *productStruct) GetExamineRecord() []db.ProductExamineRecord {
 	var result []db.ProductExamineRecord
 	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.ProductModel().Id)); err == nil {
-		if err := json.Unmarshal([]byte(r), &result); err == nil {
+		if err := json.Unmarshal(r, &result); err == nil {
 			return result
 		}
 	}
@@ -128,7 +128,7 @@ func (p *productStruct) GetExamineRecord() []db.ProductExamineRecord {
 	db.Driver.Where("product_id = ?", p.ProductModel().Id).Order("-create_time").Find(&result)
 	if r, err := json.Marshal(&result); err == nil {
 		v := hash.RandInt64(240, 240 * 5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.ProductModel().Id), string(r), int(v) * 60 * 60)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.ProductModel().Id), r, int(v) * 60 * 60)
 	}
 	return result
 }
@@ -137,31 +137,31 @@ func (p *productStruct) GetExamineRecord() []db.ProductExamineRecord {
 func (p *productStruct) GetVersionInfo() []iris.Map {
 
 	var result []iris.Map
-	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.ProductModel().Id)); err == nil {
-		if err := json.Unmarshal([]byte(r), &result); err == nil {
+	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.ProductModel().Id)); err == nil && r != nil {
+		if err := json.Unmarshal(r, &result); err == nil {
 			return result
 		}
 	}
 	p.LoadVersions()
 	product := p.ProductModel()
 
-	l := make([]iris.Map, len(product.Versions))
+	result = make([]iris.Map, len(product.Versions))
 	for i := 0; i < len(product.Versions); i++ {
-		l[i] = iris.Map {
+		result[i] = iris.Map {
 			"name": product.Versions[i].VersionName,
 			"id": product.Versions[i].Id,
 		}
 	}
 	if r, err := json.Marshal(&result); err == nil {
 		v := hash.RandInt64(240, 240 * 5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.ProductModel().Id), string(r), int(v) * 60 * 60)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.ProductModel().Id), r, int(v) * 60 * 60)
 	}
 	return result
 }
 
 // 检测产品名是否存在
 func IskNameExists(name string, pid ...int) bool {
-	if name, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductNameModel, name)); err == nil && name != "" {
+	if name, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductNameModel, name)); err == nil && name != nil {
 		return true
 	}
 
@@ -176,6 +176,6 @@ func IskNameExists(name string, pid ...int) bool {
 		}
 	}
 	v := hash.RandInt64(240, 240*5)
-	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductNameModel, name), name, int(v)*60*60)
+	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductNameModel, name), []byte(name), int(v)*60*60)
 	return true
 }

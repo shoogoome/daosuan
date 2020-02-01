@@ -35,7 +35,7 @@ require (
 	github.com/qiniu/api.v7/v7 v7.4.0
 	github.com/ryanuber/columnize v2.1.0+incompatible // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
-	github.com/shoogoome/godijan v1.3.2
+	github.com/shoogoome/godijan v1.3.3
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect

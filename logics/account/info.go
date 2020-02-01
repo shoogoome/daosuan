@@ -76,7 +76,7 @@ func (a *accountStruct) GetFollowing() []follow {
 	var follow []follow
 	// 读取缓存
 	if payload, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.FollowingModel, a.account.Id)); err == nil {
-		if err = json.Unmarshal([]byte(payload), &follow); err == nil {
+		if err = json.Unmarshal(payload, &follow); err == nil {
 			return follow
 		}
 	}
@@ -88,7 +88,7 @@ func (a *accountStruct) GetFollowing() []follow {
 		Find(&follow)
 	if payload, err := json.Marshal(follow); err == nil {
 		v := hash.RandInt64(240, 240*5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowingModel, a.account.Id), string(payload), int(v)*60*60)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowingModel, a.account.Id), payload, int(v)*60*60)
 	}
 	return follow
 }
@@ -98,7 +98,7 @@ func (a *accountStruct) GetFollowers() []follow {
 	var follow []follow
 	// 读取缓存
 	if payload, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.FollowerModel, a.account.Id)); err == nil {
-		if err = json.Unmarshal([]byte(payload), &follow); err == nil {
+		if err = json.Unmarshal(payload, &follow); err == nil {
 			return follow
 		}
 	}
@@ -110,7 +110,7 @@ func (a *accountStruct) GetFollowers() []follow {
 		Find(&follow)
 	if payload, err := json.Marshal(follow); err == nil {
 		v := hash.RandInt64(240, 240*5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowerModel, a.account.Id), string(payload), int(v)*60*60)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowerModel, a.account.Id), payload, int(v)*60*60)
 	}
 	return follow
 }
@@ -129,7 +129,7 @@ func (a *accountStruct) GetStars() []dto.ProductList {
 
 // 检测昵称是否存在
 func IsNicknameExists(nickname string, aid ...int) bool {
-	if name, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.NicknameModel, nickname)); err == nil && name != "" {
+	if name, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.NicknameModel, nickname)); err == nil && name != nil {
 		return true
 	}
 
@@ -144,6 +144,6 @@ func IsNicknameExists(nickname string, aid ...int) bool {
 		}
 	}
 	v := hash.RandInt64(240, 240*5)
-	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.NicknameModel, nickname), nickname, int(v)*60*60)
+	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.NicknameModel, nickname), []byte(nickname), int(v)*60*60)
 	return true
 }

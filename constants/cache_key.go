@@ -2,7 +2,6 @@ package constants
 
 // 缓存key
 const (
-
 	// 数据库缓存键
 	DbModel = "model"
 
@@ -28,5 +27,4 @@ const (
 
 	// 产品审核信息缓存键
 	ProductExamineRecordModel = "product:examine_record"
-
 )

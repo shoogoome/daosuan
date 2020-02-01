@@ -1,7 +1,6 @@
 package constants
 
 const (
-
 	// ------ 系统 ------
 	// cookie
 	DaoSuanSystemCookie = "DAOSUAN_SYSTEM_COOKIE"

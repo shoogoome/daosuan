@@ -138,8 +138,8 @@ func (d *driver) GetOne(table string, id int, target interface{}, db ...*gorm.DB
 	key := paramsUtils.CacheBuildKey(constants.DbModel, table, id)
 	object, err := cache.Dijan.Get(key)
 
-	if err == nil && len(object) > 0 {
-		err := json.Unmarshal([]byte(object), &target)
+	if err == nil && object != nil {
+		err := json.Unmarshal(object, &target)
 		return err
 	}
 
@@ -160,7 +160,7 @@ func (d *driver) GetOne(table string, id int, target interface{}, db ...*gorm.DB
 		target = x.Interface()
 		if resByte, err := json.Marshal(&target); err == nil {
 			v := hash.RandInt64(240, 240*5)
-			cache.Dijan.Set(key, string(resByte), int(v)*60*60)
+			cache.Dijan.Set(key, resByte, int(v)*60*60)
 		} else {
 			return err
 		}
