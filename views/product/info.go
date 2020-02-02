@@ -37,15 +37,19 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		Details:     params.Str("details", "详情页"),
 		MasterVersion: "v1.0.0",
 	}
-
-	putProductInfo(auth, params, &product, true)
+	tx := db.Driver.Begin()
+	putProductInfo(auth, params, &product, true, tx)
 	version := db.ProductVersion{
 		ProductId: product.Id,
 		Details: product.Details,
 		Additional: product.Additional,
 		VersionName: "v1.0.0",
 	}
-	db.Driver.Create(&version)
+	if err := tx.Create(&version).Error; err != nil {
+		tx.Rollback()
+		panic(productException.ProductCreateFail())
+	}
+	tx.Commit()
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountProductModel, auth.AccountModel().Id))
 	ctx.JSON(iris.Map{
