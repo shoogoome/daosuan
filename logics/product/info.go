@@ -119,16 +119,16 @@ func (p *productStruct) IsStar() bool {
 // 获取产品审核信息列表
 func (p *productStruct) GetExamineRecord() []db.ProductExamineRecord {
 	var result []db.ProductExamineRecord
-	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.ProductModel().Id)); err == nil {
+	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.product.Id)); err == nil {
 		if err := json.Unmarshal(r, &result); err == nil {
 			return result
 		}
 	}
 
-	db.Driver.Where("product_id = ?", p.ProductModel().Id).Order("-create_time").Find(&result)
+	db.Driver.Where("product_id = ?", p.product.Id).Order("-create_time").Find(&result)
 	if r, err := json.Marshal(&result); err == nil {
 		v := hash.RandInt64(240, 240 * 5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.ProductModel().Id), r, int(v) * 60 * 60)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.product.Id), r, int(v) * 60 * 60)
 	}
 	return result
 }
@@ -137,13 +137,13 @@ func (p *productStruct) GetExamineRecord() []db.ProductExamineRecord {
 func (p *productStruct) GetVersionInfo() []iris.Map {
 
 	var result []iris.Map
-	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.ProductModel().Id)); err == nil && r != nil {
+	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.product.Id)); err == nil && r != nil {
 		if err := json.Unmarshal(r, &result); err == nil {
 			return result
 		}
 	}
 	p.LoadVersions()
-	product := p.ProductModel()
+	product := p.product
 
 	result = make([]iris.Map, len(product.Versions))
 	for i := 0; i < len(product.Versions); i++ {
@@ -154,7 +154,7 @@ func (p *productStruct) GetVersionInfo() []iris.Map {
 	}
 	if r, err := json.Marshal(&result); err == nil {
 		v := hash.RandInt64(240, 240 * 5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.ProductModel().Id), r, int(v) * 60 * 60)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.product.Id), r, int(v) * 60 * 60)
 	}
 	return result
 }

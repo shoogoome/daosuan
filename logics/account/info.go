@@ -25,6 +25,7 @@ type AccountLogic interface {
 	GetFollowers() []follow
 	GetFollowing() []follow
 	GetStars() []dto.ProductList
+	GetProduct() []dto.ProductList
 }
 
 type follow struct {
@@ -115,6 +116,7 @@ func (a *accountStruct) GetFollowers() []follow {
 	return follow
 }
 
+// 获取star产品
 func (a *accountStruct) GetStars() []dto.ProductList {
 
 	var stars []dto.ProductList
@@ -126,6 +128,32 @@ func (a *accountStruct) GetStars() []dto.ProductList {
 	// star产品状态需实时，不适合缓存
 	return stars
 }
+
+// 获取步伐的产品
+func (a *accountStruct) GetProduct() []dto.ProductList {
+	var lists []dto.ProductList
+	// 读取缓存
+	if payload, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.AccountProductModel, a.account.Id)); err == nil && payload != nil {
+		if err = json.Unmarshal(payload, &lists); err == nil {
+			return lists
+		}
+	}
+
+	db.Driver.Table("product as p").
+		Where("author_id = ?", a.account.Id).
+		Select("p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
+		Order("p.update_time desc").Find(&lists)
+	for i := 0; i < len(lists); i++ {
+		lists[i].Cover = resourceLogic.GenerateToken(lists[i].Cover, -1, constants.DaoSuanSessionExpires)
+	}
+
+	if payload, err := json.Marshal(lists); err == nil {
+		v := hash.RandInt64(240, 240*5)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.AccountProductModel, a.account.Id), payload, int(v) * 60 * 60)
+	}
+	return lists
+}
+
 
 // 检测昵称是否存在
 func IsNicknameExists(nickname string, aid ...int) bool {

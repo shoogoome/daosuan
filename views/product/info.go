@@ -3,6 +3,7 @@ package product
 import (
 	"daosuan/constants"
 	"daosuan/core/auth"
+	"daosuan/core/cache"
 	"daosuan/entity"
 	"daosuan/enums/product"
 	"daosuan/exceptions/product"
@@ -17,6 +18,7 @@ import (
 	"github.com/goinggo/mapstructure"
 	"github.com/jinzhu/gorm"
 	"github.com/kataras/iris"
+	"strings"
 )
 
 // 创建产品
@@ -44,6 +46,8 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		VersionName: "v1.0.0",
 	}
 	db.Driver.Create(&version)
+	// 删除缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountProductModel, auth.AccountModel().Id))
 	ctx.JSON(iris.Map{
 		"id": product.Id,
 	})
@@ -93,7 +97,8 @@ func PutProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 	} else {
 		tx.Rollback()
 	}
-
+	// 删除缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountProductModel, auth.AccountModel().Id))
 	ctx.JSON(iris.Map{
 		"id": product.Id,
 	})
@@ -111,6 +116,8 @@ func DeleteProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid
 		// 删除所有版本
 		db.Driver.Exec("delete from `product_version` where product_id = ?", pid)
 	}
+	// 删除缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountProductModel, auth.AccountModel().Id))
 	ctx.JSON(iris.Map{
 		"id": pid,
 	})
@@ -133,7 +140,7 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	page := ctx.URLParamIntDefault("page", 1)
 
 	// 条件过滤
-	// TODO 分词搜索
+	// TODO elasticsearch 分词搜索
 	if name := ctx.URLParam("name"); len(name) > 0 {
 		nameString := fmt.Sprintf("%%%s%%", name)
 		table = table.Where("name like ?", nameString)
@@ -144,10 +151,15 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	if status, err := ctx.URLParamInt("status"); err == nil && auth.IsAdmin() {
 		table = table.Where("status = ?", status)
 	}
+	if tag := ctx.URLParam("tag"); len(tag) > 0 {
+		tagList := strings.Split(tag, ",")
+		table = table.Table("product as p, product_tags as t")
+		table = table.Where("t.product_id = p.id and t.tag_id in (?)", tagList)
+	}
 
 	table.Count(&count).Offset((page - 1) * limit).
 		Limit(limit).
-		Select("p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
+		Select("distinct p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
 		Order("update_time desc").Find(&lists)
 	for i := 0; i < len(lists); i++ {
 		lists[i].Cover = resourceLogic.GenerateToken(lists[i].Cover, -1, constants.DaoSuanSessionExpires)
@@ -171,7 +183,7 @@ func MgetProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	db.Driver.Preload("Author").Table("product").Where("id in (?)", ids).Find(&products)
 	for _, product := range products {
 		// 跳过非发布产品
-		if product.Status != productEnums.StatusReleased {
+		if !auth.IsAdmin() && product.Status != productEnums.StatusReleased {
 			continue
 		}
 		db.Driver.Model(&product).Related(&product.Tag, "Tag")

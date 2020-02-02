@@ -8,7 +8,8 @@ import (
 var Dijan godijan.GoDijan
 
 func InitDijan() {
-	Dijan = godijan.NewGoDijanConnection(
+	Dijan = godijan.NewGoDijanConnectionPool(
+		utils.GlobalConfig.Dijan.PoolNumber,
 		utils.GlobalConfig.Dijan.Host,
 		utils.GlobalConfig.Dijan.Port,
 		utils.GlobalConfig.Dijan.Node,

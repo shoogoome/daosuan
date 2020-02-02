@@ -54,6 +54,9 @@ type dijan struct {
 	// 总节点数
 	Node int `json:"node" yaml:"node"`
 
+	// 连接池数量
+	PoolNumber int `json:"pool_number" yaml:"pool_number"`
+
 }
 
 type qiniu struct {

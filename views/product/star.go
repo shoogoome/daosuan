@@ -40,7 +40,6 @@ func Star(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int) {
 	// 缓存
 	v := hash.RandInt64(240, 240 * 5)
 	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.StarModel, pid, auth.AccountModel().Id), []byte("star"), int(v) * 60 * 60)
-	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountStarModel, auth.AccountModel().Id))
 	ctx.JSON(iris.Map {
 		"id": pid,
 	})
@@ -73,7 +72,6 @@ func CancelStar(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.StarModel, pid, auth.AccountModel().Id))
-	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountStarModel, auth.AccountModel().Id))
 	ctx.JSON(iris.Map {
 		"id": pid,
 	})
