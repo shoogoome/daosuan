@@ -1,6 +1,5 @@
 package models
 
-
 type SystemConfiguration struct {
 
 	// 数据库配置
@@ -21,6 +20,12 @@ type server struct {
 
 	// 盐
 	Salt string `json:"salt" yaml:"salt"`
+
+	// 令牌桶允许最大大小，即允许瞬间爆发请求
+	TokenBucketCapacity int64 `json:"token_bucket_capacity" yaml:"token_bucket_capacity"`
+
+	// 令牌桶每秒产出，qps
+	TokenBucketOutputPerSecond int `json:"token_bucket_output_per_second" yaml:"token_bucket_output_per_second"`
 
 }
 
