@@ -3,7 +3,7 @@ package accountEnums
 import "daosuan/enums"
 
 const (
-	RoleUser = 1  // 普通用户
+	RoleUser  = 1  // 普通用户
 	RoleAdmin = 99 // 系统管理员
 )
 
@@ -12,8 +12,8 @@ type RoleEnums struct {
 }
 
 func NewRoleEnums() enumsbase.EnumBaseInterface {
-	return RoleEnums {
-		EnumBase: enumsbase.EnumBase {
+	return RoleEnums{
+		EnumBase: enumsbase.EnumBase{
 			Enums: []int{1, 99},
 		},
 	}

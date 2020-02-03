@@ -17,7 +17,7 @@ type StatusEnums struct {
 func NewStatusEnums() enumsbase.EnumBaseInterface {
 	return StatusEnums{
 		EnumBase: enumsbase.EnumBase{
-			Enums: []int{1, 2, 4, 8},
+			Enums: []int{1, 2, 4, 8, 16},
 		},
 	}
 }
