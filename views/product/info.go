@@ -240,6 +240,8 @@ func putProductInfo(auth authbase.DaoSuanAuthAuthorization, params paramsUtils.P
 		// 该方法不提供修改状态为发布
 		if statusEnum.Has(status, productEnums.StatusDraft, productEnums.StatusLowerShelf, productEnums.StatusExamine) {
 			product.Status = int16(params.Int("status", "状态"))
+		} else {
+			product.Status = productEnums.StatusDraft
 		}
 	} else {
 		product.Status = productEnums.StatusDraft

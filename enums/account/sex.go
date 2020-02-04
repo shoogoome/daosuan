@@ -8,14 +8,9 @@ const (
 	SexFemale  = 4 // 女性
 )
 
-type SexEnums struct {
-	enumsbase.EnumBase
-}
 
 func NewSexEnums() enumsbase.EnumBaseInterface {
-	return SexEnums{
-		EnumBase: enumsbase.EnumBase{
-			Enums: []int{1, 2, 4},
-		},
+	return enumsbase.EnumBase{
+		Enums: []int{1, 2, 4},
 	}
 }

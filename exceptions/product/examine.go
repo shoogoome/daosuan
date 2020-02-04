@@ -10,3 +10,11 @@ func ProductStatusIsNotExamine() models.RestfulAPIResult {
 	}
 }
 
+func ExamineFail() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5911,
+		Message: "操作失败",
+	}
+}
+

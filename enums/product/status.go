@@ -10,14 +10,8 @@ const (
 	StatusReject     = 16 // 驳回
 )
 
-type StatusEnums struct {
-	enumsbase.EnumBase
-}
-
 func NewStatusEnums() enumsbase.EnumBaseInterface {
-	return StatusEnums{
-		EnumBase: enumsbase.EnumBase{
-			Enums: []int{1, 2, 4, 8, 16},
-		},
+	return enumsbase.EnumBase{
+		Enums: []int{1, 2, 4, 8, 16},
 	}
 }

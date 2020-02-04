@@ -30,7 +30,9 @@ func Examine(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int) 
 		Adopt: params.Bool("adopt", "通过与否"),
 		Reply: params.Str("reply", "回复", ""),
 	}
-	db.Driver.Create(&record)
+	if err := db.Driver.Create(&record).Error; err != nil {
+		panic(productException.ExamineFail())
+	}
 	if record.Adopt {
 		product.Status = productEnums.StatusReleased
 	} else {
