@@ -183,10 +183,11 @@ func MgetProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	ids := params.List("ids", "id列表")
 	var data []interface{}
-	var products []db.Product
-	db.Driver.Preload("Author").Table("product").Where("id in (?)", ids).Find(&products)
-	for _, product := range products {
+	table := db.Driver.Preload("Author").Table("product")
+	products := db.Driver.GetMany("product", ids, db.Product{}, table)
+	for _, productInterface := range products {
 		// 跳过非发布产品
+		product := productInterface.(db.Product)
 		if !auth.IsAdmin() && product.Status != productEnums.StatusReleased {
 			continue
 		}

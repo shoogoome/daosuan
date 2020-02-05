@@ -58,10 +58,9 @@ func MgetAccountInfo(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	ids := params.List("ids", "id列表")
 	var data []interface{}
-	var accounts []db.Account
-	db.Driver.Table("account").Where("id in (?)", ids).Find(&accounts)
+	accounts := db.Driver.GetMany("account", ids, db.Account{})
 	for _, account := range accounts {
-		logic.SetAccountModel(account)
+		logic.SetAccountModel(account.(db.Account))
 		func(data *[]interface{}) {
 			*data = append(*data, logic.GetAccountInfo())
 			defer func() {

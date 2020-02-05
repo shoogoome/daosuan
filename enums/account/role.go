@@ -8,7 +8,7 @@ const (
 )
 
 func NewRoleEnums() enumsbase.EnumBaseInterface {
-	return enumsbase.EnumBase{
+	return enumsbase.EnumBase {
 		Enums: []int{1, 1024},
 	}
 }
