@@ -56,7 +56,7 @@ func (a *AccountLogic) AccountModel() *db.Account {
 func (a *AccountLogic) GetAccountInfo() interface{} {
 
 	if len(a.account.Avator) > 0 {
-		a.account.Avator = resourceLogic.GenerateToken(a.account.Avator, -1, constants.DaoSuanSessionExpires)
+		a.account.Avator = resourceLogic.GenerateToken(a.account.Avator, -1, -1)
 	}
 
 	return paramsUtils.ModelToDict(a.account, field)
@@ -134,7 +134,7 @@ func (a *AccountLogic) GetProduct() []dto.ProductList {
 		Select("p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
 		Order("p.update_time desc").Find(&lists)
 	for i := 0; i < len(lists); i++ {
-		lists[i].Cover = resourceLogic.GenerateToken(lists[i].Cover, -1, constants.DaoSuanSessionExpires)
+		lists[i].Cover = resourceLogic.GenerateToken(lists[i].Cover, -1, -1)
 	}
 
 	if payload, err := json.Marshal(lists); err == nil {

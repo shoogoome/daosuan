@@ -54,7 +54,7 @@ func (p *ProductLogic) LoadVersions() {
 func (p *ProductLogic) GetProductInfo() interface{} {
 	data := paramsUtils.ModelToDict(p.product, fields)
 	if len(p.product.Cover) > 0 {
-		p.product.Cover = resourceLogic.GenerateToken(p.product.Cover, -1, constants.DaoSuanSessionExpires)
+		p.product.Cover = resourceLogic.GenerateToken(p.product.Cover, -1, -1)
 	}
 	if len(p.product.Additional) > 0 {
 		var additional entity.ProductAdditional

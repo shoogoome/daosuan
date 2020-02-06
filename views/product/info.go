@@ -166,7 +166,7 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		Select("distinct p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
 		Order("update_time desc").Find(&lists)
 	for i := 0; i < len(lists); i++ {
-		lists[i].Cover = resourceLogic.GenerateToken(lists[i].Cover, -1, constants.DaoSuanSessionExpires)
+		lists[i].Cover = resourceLogic.GenerateToken(lists[i].Cover, -1, -1)
 	}
 	ctx.JSON(iris.Map{
 		"products": lists,

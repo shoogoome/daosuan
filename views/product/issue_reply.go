@@ -51,6 +51,7 @@ func ReplyIssue(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid, i
 	tx.Commit()
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductIssueReplyModel, pid, iid))
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.DbModel, "issue", pid, iid))
 	ctx.JSON(iris.Map {
 		"id": reply.Id,
 	})
@@ -81,6 +82,7 @@ func DeleteReply(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid, 
 	tx.Commit()
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductIssueReplyModel, pid, iid))
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.DbModel, "issue", pid, iid))
 	ctx.JSON(iris.Map {
 		"id": rid,
 	})
@@ -113,7 +115,7 @@ func GetReply(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid, iid
 
 	for i := 0; i < len(result); i++ {
 		if len(result[i].AuthorAvator) > 0 {
-			result[i].AuthorAvator = resourceLogic.GenerateToken(result[i].AuthorAvator, -1, constants.DaoSuanSessionExpires)
+			result[i].AuthorAvator = resourceLogic.GenerateToken(result[i].AuthorAvator, -1, -1)
 		}
 	}
 

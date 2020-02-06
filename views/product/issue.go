@@ -9,7 +9,9 @@ import (
 	"daosuan/logics/product"
 	"daosuan/logics/resource"
 	"daosuan/models/db"
+	"daosuan/utils/hash"
 	"daosuan/utils/params"
+	"encoding/json"
 	"fmt"
 	"github.com/kataras/iris"
 )
@@ -49,6 +51,13 @@ func GetIssueInfo(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid 
 		AuthorName string `json:"author_name"`
 		AuthorAvator string `json:"author_avator"`
 	}
+	// 尝试读取缓存
+	if re, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.DbModel, "issue", pid, iid)); err == nil && re != nil {
+		if err := json.Unmarshal(re, &result); err == nil {
+			ctx.JSON(result[0])
+			return
+		}
+	}
 	if err := db.Driver.
 		Table("issue as i, product as p, account as a").
 		Select("i.*, a.nickname as author_name, a.avator as author_avator").
@@ -58,7 +67,12 @@ func GetIssueInfo(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid 
 		panic(productException.IssueIsNotExists())
 	}
 	if len(result[0].AuthorAvator) > 0 {
-		result[0].AuthorAvator = resourceLogic.GenerateToken(result[0].AuthorAvator, -1, constants.DaoSuanSessionExpires)
+		result[0].AuthorAvator = resourceLogic.GenerateToken(result[0].AuthorAvator, -1, -1)
+	}
+	// 缓存
+	if re, err := json.Marshal(result); err == nil {
+		v := hash.RandInt64(240, 240 * 5)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.DbModel, "issue", pid, iid), re, int(v) * 60 * 60)
 	}
 	ctx.JSON(result[0])
 }
@@ -78,6 +92,7 @@ func DeleteIssue(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid i
 	db.Driver.Delete(issue)
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductIssueReplyModel, pid, iid))
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.DbModel, "issue", pid, iid))
 	ctx.JSON(iris.Map {
 		"id": iid,
 	})
@@ -102,7 +117,7 @@ func MgetIssue(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int
 		Find(&result)
 	for i := 0; i < len(result); i++ {
 		if len(result[i].AuthorAvator) > 0 {
-			result[i].AuthorAvator = resourceLogic.GenerateToken(result[i].AuthorAvator, -1, constants.DaoSuanSessionExpires)
+			result[i].AuthorAvator = resourceLogic.GenerateToken(result[i].AuthorAvator, -1, -1)
 		}
 	}
 	ctx.JSON(result)
@@ -142,7 +157,7 @@ func GetIssueList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid 
 	table.Count(&count).Offset((page - 1) * limit).Limit(limit).Order("-i.create_time").Find(&lists)
 	for i := 0; i < len(lists); i++ {
 		if len(lists[i].AuthorAvator) > 0 {
-			lists[i].AuthorAvator = resourceLogic.GenerateToken(lists[i].AuthorAvator, -1, constants.DaoSuanSessionExpires)
+			lists[i].AuthorAvator = resourceLogic.GenerateToken(lists[i].AuthorAvator, -1, -1)
 		}
 	}
 
