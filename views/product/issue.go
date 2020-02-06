@@ -140,6 +140,12 @@ func GetIssueList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid 
 	}
 
 	table.Count(&count).Offset((page - 1) * limit).Limit(limit).Order("-i.create_time").Find(&lists)
+	for i := 0; i < len(lists); i++ {
+		if len(lists[i].AuthorAvator) > 0 {
+			lists[i].AuthorAvator = resourceLogic.GenerateToken(lists[i].AuthorAvator, -1, constants.DaoSuanSessionExpires)
+		}
+	}
+
 	ctx.JSON(iris.Map {
 		"issues": lists,
 		"total": count,
