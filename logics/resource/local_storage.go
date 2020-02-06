@@ -20,13 +20,7 @@ import (
 	"time"
 )
 
-type ResourcesLocalStorage interface {
-	SaveFile(npath string, file []byte, cache bool) string
-	UploadAttachments(ctx iris.Context, resources string, _id int) (string, iris.Map)
-	DeleteAttachments(resources string, ids []interface{}) string
-}
-
-type resourcesLocalStorage struct {
+type ResourcesLocalStorage struct {
 	Model string
 	root  string
 }
@@ -48,13 +42,13 @@ func NewReousrcesLocalStorage(model string) ResourcesLocalStorage {
 	if _, ok := constants.StorageMapping[model]; !ok {
 		panic(resourceException.ModelNotExists())
 	}
-	return &resourcesLocalStorage{
+	return ResourcesLocalStorage{
 		Model: model,
 		root:  constants.StorageMapping[model],
 	}
 }
 
-func (r *resourcesLocalStorage) SaveFile(npath string, file []byte, cache bool) string {
+func (r *ResourcesLocalStorage) SaveFile(npath string, file []byte, cache bool) string {
 	dirName, fileName := path.Split(npath)
 	cmd := exec.Command("mkdir", "-p", path.Join(r.root, dirName))
 	cmd.Run()
@@ -77,7 +71,7 @@ func (r *resourcesLocalStorage) SaveFile(npath string, file []byte, cache bool) 
 }
 
 // 批量上传附件
-func (r *resourcesLocalStorage) UploadAttachments(ctx iris.Context, resources string, _id int) (string, iris.Map) {
+func (r *ResourcesLocalStorage) UploadAttachments(ctx iris.Context, resources string, _id int) (string, iris.Map) {
 	var dict []models.FileFormat
 	json.Unmarshal([]byte(resources), &dict)
 
@@ -147,7 +141,7 @@ func (r *resourcesLocalStorage) UploadAttachments(ctx iris.Context, resources st
 }
 
 // 删除附件
-func (r *resourcesLocalStorage) DeleteAttachments(resources string, ids []interface{}) string {
+func (r *ResourcesLocalStorage) DeleteAttachments(resources string, ids []interface{}) string {
 
 	var dict []models.FileFormat
 

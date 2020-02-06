@@ -18,23 +18,13 @@ var field = []string{
 	"EmailValidated", "Avator", "Motto", "CreateTime",
 }
 
-type AccountLogic interface {
-	GetAccountInfo() interface{}
-	AccountModel() *db.Account
-	SetAccountModel(account db.Account)
-	GetFollowers() []follow
-	GetFollowing() []follow
-	GetStars() []dto.ProductList
-	GetProduct() []dto.ProductList
-}
-
 type follow struct {
 	Id       int    `json:"id"`
 	Nickname string `json:"nickname"`
 	Motto    string `json:"motto"`
 }
 
-type accountStruct struct {
+type AccountLogic struct {
 	auth    authbase.DaoSuanAuthAuthorization
 	account db.Account
 }
@@ -49,21 +39,21 @@ func NewAccountLogic(auth authbase.DaoSuanAuthAuthorization, aid ...int) Account
 	} else {
 		account = *auth.AccountModel()
 	}
-	return &accountStruct{
+	return AccountLogic{
 		account: account,
 		auth:    auth,
 	}
 }
 
-func (a *accountStruct) SetAccountModel(account db.Account) {
+func (a *AccountLogic) SetAccountModel(account db.Account) {
 	a.account = account
 }
 
-func (a *accountStruct) AccountModel() *db.Account {
+func (a *AccountLogic) AccountModel() *db.Account {
 	return &a.account
 }
 
-func (a *accountStruct) GetAccountInfo() interface{} {
+func (a *AccountLogic) GetAccountInfo() interface{} {
 
 	if len(a.account.Avator) > 0 {
 		a.account.Avator = resourceLogic.GenerateToken(a.account.Avator, -1, constants.DaoSuanSessionExpires)
@@ -73,7 +63,7 @@ func (a *accountStruct) GetAccountInfo() interface{} {
 }
 
 // 获取关注的人
-func (a *accountStruct) GetFollowing() []follow {
+func (a *AccountLogic) GetFollowing() []follow {
 	var follow []follow
 	// 读取缓存
 	if payload, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.FollowingModel, a.account.Id)); err == nil {
@@ -95,7 +85,7 @@ func (a *accountStruct) GetFollowing() []follow {
 }
 
 // 获取关注的我的人
-func (a *accountStruct) GetFollowers() []follow {
+func (a *AccountLogic) GetFollowers() []follow {
 	var follow []follow
 	// 读取缓存
 	if payload, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.FollowerModel, a.account.Id)); err == nil {
@@ -117,7 +107,7 @@ func (a *accountStruct) GetFollowers() []follow {
 }
 
 // 获取star产品
-func (a *accountStruct) GetStars() []dto.ProductList {
+func (a *AccountLogic) GetStars() []dto.ProductList {
 
 	var stars []dto.ProductList
 	db.Driver.
@@ -130,7 +120,7 @@ func (a *accountStruct) GetStars() []dto.ProductList {
 }
 
 // 获取步伐的产品
-func (a *accountStruct) GetProduct() []dto.ProductList {
+func (a *AccountLogic) GetProduct() []dto.ProductList {
 	var lists []dto.ProductList
 	// 读取缓存
 	if payload, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.AccountProductModel, a.account.Id)); err == nil && payload != nil {

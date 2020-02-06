@@ -19,19 +19,7 @@ var fields = []string{
 	"Status", "Tag", "CreateTime", "UpdateTime", "Star", "MasterVersion",
 }
 
-type ProductLogic interface {
-	GetProductInfo() interface{}
-	ProductModel() *db.Product
-	SetProductModel(product db.Product)
-	LoadVersions()
-	VersionIsExists(string) bool
-	CheckSelf()
-	IsStar() bool
-	GetExamineRecord() []db.ProductExamineRecord
-	GetVersionInfo() []iris.Map
-}
-
-type productStruct struct {
+type ProductLogic struct {
 	auth    authbase.DaoSuanAuthAuthorization
 	product db.Product
 }
@@ -45,25 +33,25 @@ func NewProductLogic(auth authbase.DaoSuanAuthAuthorization, pid ...int) Product
 		}
 		db.Driver.Model(&product).Related(&(product.Tag), "Tag")
 	}
-	return &productStruct{
+	return ProductLogic{
 		auth:    auth,
 		product: product,
 	}
 }
 
-func (p *productStruct) ProductModel() *db.Product {
+func (p *ProductLogic) ProductModel() *db.Product {
 	return &p.product
 }
 
-func (p *productStruct) SetProductModel(product db.Product) {
+func (p *ProductLogic) SetProductModel(product db.Product) {
 	p.product = product
 }
 
-func (p *productStruct) LoadVersions() {
+func (p *ProductLogic) LoadVersions() {
 	db.Driver.Model(&p.product).Related(&p.product.Versions)
 }
 
-func (p *productStruct) GetProductInfo() interface{} {
+func (p *ProductLogic) GetProductInfo() interface{} {
 	data := paramsUtils.ModelToDict(p.product, fields)
 	if len(p.product.Cover) > 0 {
 		p.product.Cover = resourceLogic.GenerateToken(p.product.Cover, -1, constants.DaoSuanSessionExpires)
@@ -83,7 +71,7 @@ func (p *productStruct) GetProductInfo() interface{} {
 	return data
 }
 
-func (p *productStruct) VersionIsExists(versionName string) bool {
+func (p *ProductLogic) VersionIsExists(versionName string) bool {
 	var t db.ProductVersion
 	if err := db.Driver.Where("product_id = ? and version_name = ?", p.product.Id, versionName).First(&t).Error; err != nil || t.Id == 0 {
 		return false
@@ -91,13 +79,13 @@ func (p *productStruct) VersionIsExists(versionName string) bool {
 	return true
 }
 
-func (p *productStruct) CheckSelf() {
+func (p *ProductLogic) CheckSelf() {
 	if p.product.AuthorId != p.auth.AccountModel().Id {
 		panic(productException.NoPermission())
 	}
 }
 
-func (p *productStruct) IsStar() bool {
+func (p *ProductLogic) IsStar() bool {
 
 	if !p.auth.IsLogin() {
 		return false
@@ -117,7 +105,7 @@ func (p *productStruct) IsStar() bool {
 }
 
 // 获取产品审核信息列表
-func (p *productStruct) GetExamineRecord() []db.ProductExamineRecord {
+func (p *ProductLogic) GetExamineRecord() []db.ProductExamineRecord {
 	var result []db.ProductExamineRecord
 	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductExamineRecordModel, p.product.Id)); err == nil {
 		if err := json.Unmarshal(r, &result); err == nil {
@@ -134,7 +122,7 @@ func (p *productStruct) GetExamineRecord() []db.ProductExamineRecord {
 }
 
 // 获取产品版本信息列表
-func (p *productStruct) GetVersionInfo() []iris.Map {
+func (p *ProductLogic) GetVersionInfo() []iris.Map {
 
 	var result []iris.Map
 	if r, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductVersionInfoModel, p.product.Id)); err == nil && r != nil {
