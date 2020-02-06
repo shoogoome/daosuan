@@ -42,4 +42,20 @@ func ReplyFail() models.RestfulAPIResult {
 	}
 }
 
+func ReplyDeleteFail() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5917,
+		Message: "删除失败",
+	}
+}
+
+func IsNotAllowAtSelf() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5918,
+		Message: "不允许@自己",
+	}
+}
+
 

@@ -29,18 +29,28 @@ func ReplyIssue(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid, i
 	}
 	if params.Has("at_account_id") {
 		aid := params.Int("at_account_id", "@回复人id")
+		if aid == auth.AccountModel().Id {
+			panic(productException.IsNotAllowAtSelf())
+		}
 		var atAccount db.Account
 		if err := db.Driver.GetOne("account", aid, &atAccount); err != nil || atAccount.Id == 0 {
 			panic(productException.AtAccountIsNotFound())
 		}
 		reply.AtAccountId = aid
 	}
-	if err := db.Driver.Create(&reply).Error; err == nil {
-		// 删除缓存
-		cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductIssueReplyModel, pid, iid))
-	} else {
+	tx := db.Driver.Begin()
+	if err := tx.Create(&reply).Error; err != nil {
+		tx.Rollback()
 		panic(productException.ReplyFail())
 	}
+	logic.IssueModel().ReplyNumber += 1
+	if err := tx.Save(logic.IssueModel()).Error; err != nil {
+		tx.Rollback()
+		panic(productException.ReplyFail())
+	}
+	tx.Commit()
+	// 删除缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductIssueReplyModel, pid, iid))
 	ctx.JSON(iris.Map {
 		"id": reply.Id,
 	})
@@ -50,17 +60,27 @@ func ReplyIssue(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid, i
 func DeleteReply(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid, iid, rid int) {
 	auth.CheckLogin()
 
+	logic := productLogic.NewIssueLogic(auth, pid, iid)
 	var reply db.IssueReply
 	if err := db.Driver.GetOne("issue_Reply", rid, &reply); err != nil {
 		panic(productException.ReplyIsNotExists())
 	}
-	if !auth.IsAdmin() || reply.AuthorId != auth.AccountModel().Id {
+	if !auth.IsAdmin() && reply.AuthorId != auth.AccountModel().Id {
 		panic(productException.NoPermission())
 	}
-	if err := db.Driver.Delete(reply).Error; err == nil {
-		// 删除缓存
-		cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductIssueReplyModel, pid, iid))
+	tx := db.Driver.Begin()
+	if err := tx.Delete(reply).Error; err != nil {
+		tx.Rollback()
+		panic(productException.ReplyDeleteFail())
 	}
+	logic.IssueModel().ReplyNumber -= 1
+	if err := tx.Save(logic.IssueModel()).Error; err != nil {
+		tx.Rollback()
+		panic(productException.ReplyDeleteFail())
+	}
+	tx.Commit()
+	// 删除缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.ProductIssueReplyModel, pid, iid))
 	ctx.JSON(iris.Map {
 		"id": rid,
 	})
@@ -83,11 +103,11 @@ func GetReply(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid, iid
 		}
 	}
 	db.Driver.
-		Table("issue as i, product as p, account as a, issue_reply as r, account as at").
+		Table("issue as i, product as p, account as a, issue_reply as r left join account as at on at.id = r.at_account_id").
 		Select("r.*, a.nickname as author_name, a.avator as author_avator, at.nickname as at_account_name").
 		Where("r.issue_id = i.id and p.id = i.product_id and p.id = ? and p.status = ?", pid, productEnums.StatusReleased).
-		Where("r.author_id = a.id and (r.at_account_id = 0 || r.at_account_id = at.id)").
-		Where("i.id", iid).
+		Where("r.author_id = a.id").
+		Where("i.id = ?", iid).
 		Order("create_time").
 		Find(&result)
 

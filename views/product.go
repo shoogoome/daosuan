@@ -25,6 +25,7 @@ func RegisterProductRouters(app *iris.Application) {
 
 	// 账户版本路由
 	productVersionRouter := app.Party("/products/{pid:int}/versions")
+
 	productVersionRouter.Post("", hero.Handler(product.CreateProductVersion))
 	productVersionRouter.Get("/check/version_name/{name:string}", hero.Handler(product.CheckVersionName))
 	productVersionRouter.Get("/{vid:int}", hero.Handler(product.GetVersion))
@@ -33,7 +34,19 @@ func RegisterProductRouters(app *iris.Application) {
 	productVersionRouter.Get("/list", hero.Handler(product.GetProductVersionList))
 	productVersionRouter.Get("/{vid:int}/set/master", hero.Handler(product.SetMaster))
 
+	// issue路由
+	IssueRouter := app.Party("/products/{pid:int}/issues")
 
+	IssueRouter.Post("", hero.Handler(product.CreateIssue))
+	IssueRouter.Get("/list", hero.Handler(product.GetIssueList))
+	IssueRouter.Post("/_mget", hero.Handler(product.MgetIssue))
+	IssueRouter.Get("/{iid:int}", hero.Handler(product.GetIssueInfo))
+	IssueRouter.Delete("/{iid:int}", hero.Handler(product.DeleteIssue))
 
+	// issue_reply路由
+	IssueReplyRouter := app.Party("/products/{pid:int}/issues/{iid:int}/reply")
+	IssueReplyRouter.Post("", hero.Handler(product.ReplyIssue))
+	IssueReplyRouter.Delete("/{rid:int}", hero.Handler(product.DeleteReply))
+	IssueReplyRouter.Get("", hero.Handler(product.GetReply))
 }
 
