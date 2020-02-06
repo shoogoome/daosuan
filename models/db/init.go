@@ -48,6 +48,8 @@ Conn:
 		&Account{}, &AccountStar{}, AccountFollow{},
 		// 产品模块
 		&Product{}, &Tag{}, &ProductVersion{}, &ProductExamineRecord{},
+		// 问题模块
+		&Issue{}, &IssueReply{},
 	)
 }
 

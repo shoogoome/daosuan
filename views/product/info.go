@@ -31,18 +31,18 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		panic(productException.NameIsExist())
 	}
 	product := db.Product{
-		Name:        params.Str("name", "名称"),
-		AuthorId:    auth.AccountModel().Id,
-		Description: params.Str("description", "简介", ""),
-		Details:     params.Str("details", "详情页"),
+		Name:          params.Str("name", "名称"),
+		AuthorId:      auth.AccountModel().Id,
+		Description:   params.Str("description", "简介", ""),
+		Details:       params.Str("details", "详情页"),
 		MasterVersion: "v1.0.0",
 	}
 	tx := db.Driver.Begin()
 	putProductInfo(auth, params, &product, true, tx)
 	version := db.ProductVersion{
-		ProductId: product.Id,
-		Details: product.Details,
-		Additional: product.Additional,
+		ProductId:   product.Id,
+		Details:     product.Details,
+		Additional:  product.Additional,
 		VersionName: "v1.0.0",
 	}
 	if err := tx.Create(&version).Error; err != nil {
@@ -136,7 +136,7 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	// 可看自己产品的所有状态产品列表
 	if me, err := ctx.URLParamBool("me"); err == nil && me {
 		table = table.Where("p.author_id = ?", auth.AccountModel().Id)
-	// 非系统管理员则只能看发布状态的产品列表
+		// 非系统管理员则只能看发布状态的产品列表
 	} else if !auth.IsAdmin() {
 		table = table.Where("p.status = ?", productEnums.StatusReleased)
 	}
@@ -209,7 +209,7 @@ func MgetProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 // 检测产品名是否存在
 func CheckName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, name string) {
 	auth.CheckLogin()
-	ctx.JSON(iris.Map {
+	ctx.JSON(iris.Map{
 		"status": productLogic.IskNameExists(name),
 	})
 }
