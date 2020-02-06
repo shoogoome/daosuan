@@ -18,4 +18,28 @@ func IssueIsNotExists() models.RestfulAPIResult {
 	}
 }
 
+func AtAccountIsNotFound() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5914,
+		Message: "目标回复人不存在",
+	}
+}
+
+func ReplyIsNotExists() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5915,
+		Message: "回复不存在",
+	}
+}
+
+func ReplyFail() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5916,
+		Message: "回复失败",
+	}
+}
+
 

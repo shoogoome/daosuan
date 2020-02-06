@@ -27,4 +27,8 @@ const (
 
 	// 产品审核信息缓存键
 	ProductExamineRecordModel = "product:examine_record"
+
+	// 产品issue回复缓存键
+	ProductIssueReplyModel = "product:issue:reply"
+
 )

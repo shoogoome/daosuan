@@ -11,6 +11,9 @@ type Issue struct {
 	// 发布人id
 	AuthorId int `json:"author_id" gorm:"not null"`
 
+	// 标题
+	Title string `json:"title" gorm:"not null"`
+
 	// 内容
 	Content string `json:"content" gorm:"not null;type:text"`
 
