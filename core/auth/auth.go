@@ -12,12 +12,8 @@ import (
 )
 
 type DaoSuanAuthAuthorization interface {
-	loadAuthenticationInfo()
-	loadFromSession() bool
-	loadFromCookie() bool
 	SetSession(aid int)
 	SetCookie(aid int)
-	fetchAccount(aid int) bool
 	CheckLogin()
 	IsAdmin() bool
 	CheckAdmin()

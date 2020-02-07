@@ -13,7 +13,7 @@ const (
 
 	FollowerModel = "account:follower"
 
-	// 用户点赞缓存键
+	// 用户产品缓存键
 	AccountProductModel = "account:product"
 
 	// 点赞缓存键

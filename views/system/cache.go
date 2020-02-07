@@ -10,6 +10,7 @@ import (
 	"daosuan/utils/params"
 	"fmt"
 	"github.com/shoogoome/godijan"
+	"time"
 
 	"daosuan/models/db"
 	"encoding/json"
@@ -21,6 +22,8 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	auth.CheckAdmin()
 
 	go func() {
+		startTime := time.Now()
+
 		// 账户表缓存
 		fmt.Println("[*] 开始重建账户表及账户附属信息缓存...")
 		var accounts []db.Account
@@ -166,7 +169,7 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		fmt.Println("[*] 问答回复表缓存完毕")
 
 		// 缓存结束
-		fmt.Println("[*] 缓存结束")
+		fmt.Println("[*] 缓存结束，总耗时" + time.Now().Sub(startTime).String())
 	}()
 
 	ctx.JSON(iris.Map{
