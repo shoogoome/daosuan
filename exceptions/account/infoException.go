@@ -12,6 +12,14 @@ func NicknameIsExists() models.RestfulAPIResult {
 	}
 }
 
+func EmailIsExists() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5307,
+		Message: "该邮箱已创建账户",
+	}
+}
+
 func PasswordLengthIsNotStandard() models.RestfulAPIResult {
 	return models.RestfulAPIResult{
 		Status: false,

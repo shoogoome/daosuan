@@ -24,7 +24,7 @@ func Register(ctx iris.Context) {
 	}
 	db.Driver.Where("email = ?", email).First(&account)
 	if account.Id != 0 {
-		panic(accountException.NicknameIsExists())
+		panic(accountException.EmailIsExists())
 	}
 
 	password := params.Str("password", "密码")
@@ -40,6 +40,7 @@ func Register(ctx iris.Context) {
 		Password: hash.PasswordSignature(password),
 		Role: int16(accountEnums.RoleUser),
 		EmailValidated: true, // 后续改
+		Nickname: nickname,
 	}
 	db.Driver.Create(&account)
 	ctx.JSON(iris.Map{
