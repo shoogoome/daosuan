@@ -27,6 +27,8 @@ type server struct {
 	// 令牌桶每秒产出，qps
 	TokenBucketOutputPerSecond int `json:"token_bucket_output_per_second" yaml:"token_bucket_output_per_second"`
 
+	// 任务队列长度
+	TaskQueueLength int `json:"task_queue_length" yaml:"task_queue_length"`
 }
 
 type mysql struct {

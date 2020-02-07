@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"daosuan/utils"
 	"daosuan/utils/log"
 	"fmt"
 	"time"
@@ -11,7 +12,7 @@ var Task chan func()
 // 初始化任务队列
 func InitTaskQueue() {
 
-	Task = make(chan func(), 100)
+	Task = make(chan func(), utils.GlobalConfig.Server.TaskQueueLength)
 	go func() {
 		for {
 			function := <-Task
