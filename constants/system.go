@@ -13,4 +13,8 @@ const (
 
 	// ------ 资源 ------
 	StorageTokenTime = 300
+
+
+	// 任务队列长度
+	QueueTaskLength = 100
 )
