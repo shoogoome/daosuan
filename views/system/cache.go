@@ -95,7 +95,7 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		fmt.Println("[*] 产品表及附属信息缓存完毕")
 
 		// 用户产品点赞表缓存
-		fmt.Println("[*] 开始重建用户点赞表及附属信息缓存...")
+		fmt.Println("[*] 开始重建产品点赞表及附属信息缓存...")
 		var stars []db.AccountStar
 		db.Driver.Find(&stars)
 
@@ -121,10 +121,10 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		// 写入缓存
 		cache.Dijan.PipelinedRun(cmds)
-		fmt.Println("[*] 产品表及附属信息缓存完毕")
+		fmt.Println("[*] 产品点赞表及附属信息缓存完毕")
 
 		// 产品issue表缓存
-		fmt.Println("[*] 开始重建issue表...")
+		fmt.Println("[*] 开始重建issue表缓存...")
 		var issues []db.Issue
 		db.Driver.Find(&issues)
 
@@ -147,7 +147,7 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 
 		// 产品issue回复表缓存
-		fmt.Println("[*] 开始问答回复表...")
+		fmt.Println("[*] 开始缓存问答回复表...")
 		var replies []db.IssueReply
 		db.Driver.Find(&replies)
 
