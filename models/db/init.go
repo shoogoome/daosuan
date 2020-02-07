@@ -45,7 +45,7 @@ Conn:
 	Driver.SingularTable(true)
 	Driver.AutoMigrate(
 		// 账户模块
-		&Account{}, &AccountStar{}, AccountFollow{},
+		&Account{}, &AccountStar{}, &AccountFollow{}, &AccountOauth{},
 		// 产品模块
 		&Product{}, &Tag{}, &ProductVersion{}, &ProductExamineRecord{},
 		// 问题模块

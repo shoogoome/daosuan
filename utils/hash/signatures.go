@@ -88,6 +88,7 @@ func GetRandomString(l int) string {
 
 // 两数间随机
 func RandInt64(min, max int64) int64 {
+	rand.Seed(time.Now().UnixNano())
 	if min >= max || min == 0 || max == 0 {
 		return max
 	}

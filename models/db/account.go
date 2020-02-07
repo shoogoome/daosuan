@@ -74,3 +74,30 @@ type AccountFollow struct {
 
 	CreateTime int64 `json:"create_time"`
 }
+
+// 用户第三方验证
+type AccountOauth struct {
+
+	Id        int `gorm:"primary_key" json:"id"`
+
+	// 用户id
+	AccountId int `json:"account_id"`
+
+	// 关联模块
+	Model int16 `json:"model"`
+
+	// openid
+	OpenId string `json:"open_id"`
+
+	// 用户信息
+	UserInfo string `json:"user_info" gorm:"default:'';type:text"`
+
+	// 其他信息
+	ExtraInfo string `json:"extra_info" gorm:"default:'';type:text"`
+
+	// 创建时间
+	CreateTime int64 `json:"create_time"`
+
+	// 更新时间
+	UpdateTime int64 `json:"update_time"`
+}
