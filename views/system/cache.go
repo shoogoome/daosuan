@@ -4,28 +4,26 @@ import (
 	"daosuan/constants"
 	"daosuan/core/auth"
 	"daosuan/core/cache"
+	"daosuan/core/queue"
 	"daosuan/logics/account"
 	"daosuan/logics/product"
-	"daosuan/utils/hash"
-	"daosuan/utils/params"
-	"fmt"
-	"github.com/shoogoome/godijan"
-	"time"
-
 	"daosuan/models/db"
+	"daosuan/utils/hash"
+	logUtils "daosuan/utils/log"
+	"daosuan/utils/params"
 	"encoding/json"
 	"github.com/kataras/iris"
+	"github.com/shoogoome/godijan"
 )
 
 // 缓存重建
 func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	auth.CheckAdmin()
 
-	go func() {
-		startTime := time.Now()
-
+	// 加入任务队列
+	queue.Task <- func() {
 		// 账户表缓存
-		fmt.Println("[*] 开始重建账户表及账户附属信息缓存...")
+		logUtils.Println("开始重建账户表及账户附属信息缓存...")
 		var accounts []db.Account
 		db.Driver.Find(&accounts)
 
@@ -58,10 +56,10 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		// 写入缓存
 		cache.Dijan.PipelinedRun(cmds)
-		fmt.Println("[*] 账户表及附属信息缓存完毕")
+		logUtils.Println("账户表及附属信息缓存完毕")
 
 		// 产品表缓存
-		fmt.Println("[*] 开始重建产品表及附属信息缓存...")
+		logUtils.Println("开始重建产品表及附属信息缓存...")
 		var products []db.Product
 		db.Driver.Preload("Author").Find(&products)
 
@@ -92,10 +90,10 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		// 写入缓存
 		cache.Dijan.PipelinedRun(cmds)
-		fmt.Println("[*] 产品表及附属信息缓存完毕")
+		logUtils.Println("产品表及附属信息缓存完毕")
 
 		// 用户产品点赞表缓存
-		fmt.Println("[*] 开始重建产品点赞表及附属信息缓存...")
+		logUtils.Println("开始重建产品点赞表及附属信息缓存...")
 		var stars []db.AccountStar
 		db.Driver.Find(&stars)
 
@@ -121,10 +119,10 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		// 写入缓存
 		cache.Dijan.PipelinedRun(cmds)
-		fmt.Println("[*] 产品点赞表及附属信息缓存完毕")
+		logUtils.Println("产品点赞表及附属信息缓存完毕")
 
 		// 产品issue表缓存
-		fmt.Println("[*] 开始重建issue表缓存...")
+		logUtils.Println("开始重建issue表缓存...")
 		var issues []db.Issue
 		db.Driver.Find(&issues)
 
@@ -143,11 +141,11 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		// 写入缓存
 		cache.Dijan.PipelinedRun(cmds)
-		fmt.Println("[*] issue表缓存完毕")
+		logUtils.Println("issue表缓存完毕")
 
 
 		// 产品issue回复表缓存
-		fmt.Println("[*] 开始缓存问答回复表...")
+		logUtils.Println("开始缓存问答回复表...")
 		var replies []db.IssueReply
 		db.Driver.Find(&replies)
 
@@ -166,13 +164,10 @@ func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		// 写入缓存
 		cache.Dijan.PipelinedRun(cmds)
-		fmt.Println("[*] 问答回复表缓存完毕")
-
-		// 缓存结束
-		fmt.Println("[*] 缓存结束，总耗时" + time.Now().Sub(startTime).String())
-	}()
+		logUtils.Println("问答回复表缓存完毕")
+	}
 
 	ctx.JSON(iris.Map{
-		"status": "已启动后台缓存重建。详情可查看日志",
+		"status": "重建任务已加入后台队列。详情可查看日志",
 	})
 }
