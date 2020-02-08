@@ -9,13 +9,6 @@ import (
 // 重载配置
 func HeavyLoadConfig(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	auth.CheckAdmin()
-	defer func() {
-		if err := recover(); err != nil {
-			ctx.JSON(iris.Map {
-				"status": "重载失败",
-			})
-		}
-	}()
 	utils.InitGlobal()
 	ctx.JSON(iris.Map {
 		"status": "重载成功",
