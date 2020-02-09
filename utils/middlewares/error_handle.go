@@ -17,7 +17,7 @@ func AbnormalHandle(ctx iris.Context) {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		// 打印堆栈信息
 		if debug, err := ctx.URLParamInt("debug"); err == nil && debug == 1 {
-			ctx.Text(stack())
+			ctx.Text(fmt.Sprintf("%v\n%s", re, stack()))
 			return
 		}
 		// 输出api格式反馈
