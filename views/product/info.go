@@ -79,8 +79,10 @@ func PutProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 
 	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
 	params.Diff(*product)
+	// 检查名称冲突
 	name := params.Str("name", "名称")
-	if productLogic.IskNameExists(name, product.Id) {
+	var t db.Product
+	if err := db.Driver.Where("name = ? and id != ?", name, product.Id).First(&t).Error; err == nil && t.Id != 0 {
 		panic(productException.NameIsExist())
 	}
 	product.Name = name

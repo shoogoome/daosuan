@@ -148,20 +148,14 @@ func (p *ProductLogic) GetVersionInfo() []iris.Map {
 }
 
 // 检测产品名是否存在
-func IskNameExists(name string, pid ...int) bool {
+func IskNameExists(name string) bool {
 	if name, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.ProductNameModel, name)); err == nil && name != nil {
 		return true
 	}
 
 	var t db.Product
-	if len(pid) > 0 {
-		if err := db.Driver.Where("name = ? and id != ?", name, pid[0]).First(&t).Error; err != nil || t.Id == 0 {
-			return false
-		}
-	} else {
-		if err := db.Driver.Where("name = ?", name).First(&t).Error; err != nil || t.Id == 0 {
-			return false
-		}
+	if err := db.Driver.Where("name = ?", name).First(&t).Error; err != nil || t.Id == 0 {
+		return false
 	}
 	v := hash.RandInt64(240, 240*5)
 	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.ProductNameModel, name), []byte(name), int(v)*60*60)

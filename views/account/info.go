@@ -89,7 +89,8 @@ func PutAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid in
 	params.Diff(*account)
 	account.Nickname = params.Str("nickname", "昵称")
 	// 检测昵称存在情况
-	if accountLogic.IsNicknameExists(account.Nickname, account.Id) {
+	var a db.Account
+	if err := db.Driver.Where("nickname = ? and id != ?", account.Nickname, account.Id).First(&a).Error; err == nil && account.Id != 0 {
 		panic(accountException.NicknameExists())
 	}
 	account.Motto = params.Str("motto", "一句话签名")

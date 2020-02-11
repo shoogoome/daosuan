@@ -146,20 +146,14 @@ func (a *AccountLogic) GetProduct() []dto.ProductList {
 
 
 // 检测昵称是否存在
-func IsNicknameExists(nickname string, aid ...int) bool {
+func IsNicknameExists(nickname string) bool {
 	if name, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.NicknameModel, nickname)); err == nil && name != nil {
 		return true
 	}
 
 	var account db.Account
-	if len(aid) > 0 {
-		if err := db.Driver.Where("nickname = ? and id != ?", nickname, aid[0]).First(&account).Error; err != nil || account.Id == 0 {
-			return false
-		}
-	} else {
-		if err := db.Driver.Where("nickname = ?", nickname).First(&account).Error; err != nil || account.Id == 0 {
-			return false
-		}
+	if err := db.Driver.Where("nickname = ?", nickname).First(&account).Error; err != nil || account.Id == 0 {
+		return false
 	}
 	v := hash.RandInt64(240, 240*5)
 	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.NicknameModel, nickname), []byte(nickname), int(v)*60*60)
