@@ -38,7 +38,7 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		MasterVersion: "v1.0.0",
 	}
 	tx := db.Driver.Begin()
-	putProductInfo(auth, params, &product, true, tx)
+	putProductInfo(params, &product, true, tx)
 	version := db.ProductVersion{
 		ProductId:   product.Id,
 		Details:     product.Details,
@@ -90,7 +90,7 @@ func PutProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 	product.Details = params.Str("details", "详情页")
 
 	tx := db.Driver.Begin()
-	putProductInfo(auth, params, product, false, tx)
+	putProductInfo(params, product, false, tx)
 	var version db.ProductVersion
 	if err := db.Driver.Where("product_id = ? and version_name = ?", pid, product.MasterVersion).First(&version).Error; err == nil {
 		version.Details = product.Details
@@ -217,7 +217,7 @@ func CheckName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, name st
 }
 
 // 修改产品信息
-func putProductInfo(auth authbase.DaoSuanAuthAuthorization, params paramsUtils.ParamsParser, product *db.Product, create bool, tx ...*gorm.DB) {
+func putProductInfo(params paramsUtils.ParamsParser, product *db.Product, create bool, tx ...*gorm.DB) {
 	defer func() {
 		if err := recover(); err != nil {
 			if len(tx) > 0 {
