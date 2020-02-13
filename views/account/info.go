@@ -2,6 +2,7 @@ package account
 
 import (
 	authbase "daosuan/core/auth"
+	"daosuan/core/queue"
 	"daosuan/enums/account"
 	accountException "daosuan/exceptions/account"
 	accountLogic "daosuan/logics/account"
@@ -16,8 +17,13 @@ import (
 
 // 获取用户信息
 func GetAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int) {
-	logic := accountLogic.NewAccountLogic(auth, aid)
-	ctx.JSON(logic.GetAccountInfo())
+
+	if err := queue.Message.Publish("test", []byte("nihao")); err != nil {
+		panic(err)
+	}
+
+	//logic := accountLogic.NewAccountLogic(auth, aid)
+	//ctx.JSON(logic.GetAccountInfo())
 }
 
 // 获取用户列表

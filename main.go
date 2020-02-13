@@ -37,6 +37,8 @@ func main() {
 	cache.InitDijan()
 	// 初始化任务队列
 	queue.InitTaskQueue()
+	// 初始化消息队列
+	queue.InitMessageQueue()
 	// 启动系统
 	app.Run(iris.Addr(":80"), iris.WithoutServerError(iris.ErrServerClosed))
 }

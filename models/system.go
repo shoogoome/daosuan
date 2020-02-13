@@ -13,6 +13,9 @@ type SystemConfiguration struct {
 
 	// 七牛配置
 	QiNiu qiniu `json:"qi_niu" yaml:"qi_niu"`
+
+	// nsq配置
+	Nsq nsq `json:"nsq" yaml:"nsq"`
 }
 
 
@@ -79,4 +82,13 @@ type qiniu struct {
 
 	// 密钥
 	SecretKey string `json:"secret_key" yaml:"secret_key"`
+}
+
+type nsq struct {
+
+	// host
+	Host string `json:"host" yaml:"host"`
+
+	// 端口
+	Port int `json:"port" yaml:"port"`
 }
