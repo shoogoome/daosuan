@@ -1,10 +1,10 @@
 package utils
 
 import (
+	"daosuan/models"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"daosuan/models"
 )
 
 var GlobalConfig models.SystemConfiguration

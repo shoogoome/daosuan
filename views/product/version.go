@@ -1,9 +1,11 @@
 package product
 
 import (
+	"bytes"
 	"daosuan/constants"
 	"daosuan/core/auth"
 	"daosuan/core/cache"
+	"daosuan/core/elasticsearch"
 	"daosuan/entity"
 	productException "daosuan/exceptions/product"
 	"daosuan/logics/product"
@@ -137,6 +139,10 @@ func SetMaster(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int
 	product.Additional = version.Additional
 	product.MasterVersion = version.VersionName
 	db.Driver.Save(&product)
+	// 修改索引信息
+	if re, err := json.Marshal(product); err == nil {
+		elasticsearch.Update("product", "root", product.Id, bytes.NewBuffer(re))
+	}
 	ctx.JSON(iris.Map {
 		"id": pid,
 	})

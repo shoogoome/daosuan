@@ -16,6 +16,9 @@ type SystemConfiguration struct {
 
 	// nsq配置
 	Nsq nsq `json:"nsq" yaml:"nsq"`
+
+	// elasticsearch配置
+	Elasticsearch elasticsearch `json:"elasticsearch" yaml:"elasticsearch"`
 }
 
 
@@ -90,5 +93,14 @@ type nsq struct {
 	Host string `json:"host" yaml:"host"`
 
 	// 端口
+	Port int `json:"port" yaml:"port"`
+}
+
+type elasticsearch struct {
+
+	// host
+	Host string `json:"host" yaml:"host"`
+
+	// port
 	Port int `json:"port" yaml:"port"`
 }

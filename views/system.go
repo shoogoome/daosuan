@@ -17,4 +17,6 @@ func RegisterSystemRouters(app *iris.Application) {
 	systemRouter.Get("/reset_cache", hero.Handler(system.ResetCache))
 	// 重载配置
 	systemRouter.Get("/load_config", hero.Handler(system.HeavyLoadConfig))
+	// 重建索引
+	systemRouter.Get("/reset_index", hero.Handler(system.ResetElasticsearchIndex))
 }

@@ -1,9 +1,11 @@
 package product
 
 import (
+	"bytes"
 	"daosuan/constants"
 	"daosuan/core/auth"
 	"daosuan/core/cache"
+	"daosuan/core/elasticsearch"
 	"daosuan/entity"
 	"daosuan/enums/product"
 	"daosuan/exceptions/product"
@@ -52,6 +54,10 @@ func CreateProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	tx.Commit()
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountProductModel, auth.AccountModel().Id))
+	// 创建索引
+	if re, err := json.Marshal(product); err == nil {
+		elasticsearch.Create("product", "root", product.Id, bytes.NewBuffer(re))
+	}
 	ctx.JSON(iris.Map{
 		"id": product.Id,
 	})
@@ -105,6 +111,13 @@ func PutProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 	}
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountProductModel, auth.AccountModel().Id))
+	// 修改索引信息
+	doc := map[string]interface{}{
+		"doc": product,
+	}
+	if re, err := json.Marshal(doc); err == nil {
+		elasticsearch.Update("product", "root", product.Id, bytes.NewBuffer(re))
+	}
 	ctx.JSON(iris.Map{
 		"id": product.Id,
 	})
@@ -124,6 +137,8 @@ func DeleteProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid
 	}
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountProductModel, auth.AccountModel().Id))
+	// 删除索引
+	elasticsearch.Delete("product", "root", product.Id)
 	ctx.JSON(iris.Map{
 		"id": pid,
 	})
@@ -147,6 +162,11 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	// 条件过滤
 	// TODO elasticsearch 分词搜索
+	if q := ctx.URLParam("q"); len(q) > 0 {
+		config := elasticsearch.NewProductSearchConfig(limit * (page - 1), limit)
+		ctx.JSON(elasticsearch.GlobalSearch("product", q, config))
+		return
+	}
 	if name := ctx.URLParam("name"); len(name) > 0 {
 		nameString := fmt.Sprintf("%%%s%%", name)
 		table = table.Where("name like ?", nameString)
