@@ -7,17 +7,6 @@ import (
 
 type dict map[string]interface{}
 
-// 搜索配置
-type Config struct {
-	// 分页配置
-	from int
-	size int
-	// 显示字段
-	source []string
-	// 搜索字段
-	fields []string
-}
-
 // 新建全局搜索请求
 func newGlobalSearchBody(key string, conf ...Config) *bytes.Buffer {
 	body := dict {
