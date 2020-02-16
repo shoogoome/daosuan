@@ -1,14 +1,17 @@
 package product
 
 import (
+	"bytes"
 	"daosuan/constants"
 	authbase "daosuan/core/auth"
 	"daosuan/core/cache"
+	"daosuan/core/elasticsearch"
 	"daosuan/exceptions/product"
 	productLogic "daosuan/logics/product"
 	"daosuan/models/db"
 	"daosuan/utils/hash"
 	paramsUtils "daosuan/utils/params"
+	"encoding/json"
 	"github.com/kataras/iris"
 )
 
@@ -40,6 +43,13 @@ func Star(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid int) {
 	// 缓存
 	v := hash.RandInt64(240, 240 * 5)
 	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.StarModel, pid, auth.AccountModel().Id), []byte("star"), int(v) * 60 * 60)
+	// 修改索引信息
+	doc := map[string]interface{}{
+		"doc": product,
+	}
+	if re, err := json.Marshal(doc); err == nil {
+		elasticsearch.Update("product", "root", product.Id, bytes.NewBuffer(re))
+	}
 	ctx.JSON(iris.Map {
 		"id": pid,
 	})
@@ -57,9 +67,10 @@ func CancelStar(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 	}
 
 	// 删除数据
+	product := logic.ProductModel()
 	tx := db.Driver.Begin()
-	logic.ProductModel().Star -= 1
-	if err := tx.Save(logic.ProductModel()).Error; err != nil {
+	product.Star -= 1
+	if err := tx.Save(&product).Error; err != nil {
 		tx.Rollback()
 		panic(productException.CancelStarFail())
 	}
@@ -72,6 +83,13 @@ func CancelStar(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid in
 
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.StarModel, pid, auth.AccountModel().Id))
+	// 修改索引信息
+	doc := map[string]interface{}{
+		"doc": product,
+	}
+	if re, err := json.Marshal(doc); err == nil {
+		elasticsearch.Update("product", "root", product.Id, bytes.NewBuffer(re))
+	}
 	ctx.JSON(iris.Map {
 		"id": pid,
 	})
