@@ -25,7 +25,7 @@ func initRouter(app *iris.Application) {
 func main() {
 	app := iris.New()
 	// 注册控制器
-	app.UseGlobal(middlewares.AbnormalHandle)
+	app.UseGlobal(middlewares.AbnormalHandle, middlewares.RequestLogHandle)
 	hero.Register(viewbase.DaoSuanView)
 	// 注册路由
 	initRouter(app)
