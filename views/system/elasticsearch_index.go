@@ -12,7 +12,7 @@ import (
 
 // 重建elasticsearch索引
 func ResetElasticsearchIndex(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
-	auth.CheckAdmin()
+	//auth.CheckAdmin()
 
 	queue.Task <- func() {
 		var products []db.Product

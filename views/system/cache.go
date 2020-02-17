@@ -18,7 +18,7 @@ import (
 
 // 缓存重建
 func ResetCache(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
-	auth.CheckAdmin()
+	//auth.CheckAdmin()
 
 	// 加入任务队列
 	queue.Task <- func() {
