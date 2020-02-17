@@ -7,6 +7,6 @@ import (
 
 // 请求日志
 func RequestLogHandle(ctx iris.Context) {
-	logUtils.Println(ctx.RemoteAddr(), ctx.Method(), ctx.Path())
+	logUtils.Println("Host:", ctx.RemoteAddr(), "Method:", ctx.Method(), "Path:", ctx.Path())
 	ctx.Next()
 }
