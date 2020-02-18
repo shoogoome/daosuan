@@ -4,7 +4,6 @@ import (
 	"context"
 	"daosuan/core/auth"
 	"daosuan/enums/account"
-	"daosuan/exceptions/account"
 	resourceLogic "daosuan/logics/resource"
 	"daosuan/models/db"
 	"daosuan/utils"
@@ -38,14 +37,16 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	token, err := utils.GlobalConfig.Oauth.GitHub.Oauth2Config.Exchange(context.Background(), code)
 
 	if err != nil {
-		panic(accountException.OauthVerificationFail())
+		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+		return
 	}
 	oauth2Client := utils.GlobalConfig.Oauth.GitHub.Oauth2Config.Client(context.Background(), token)
 	client := github.NewClient(oauth2Client)
 	userInfo, _, err := client.Users.Get(context.Background(), "")
 
 	if err != nil || userInfo == nil {
-		panic(accountException.OauthVerificationFail())
+		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+		return
 	}
 
 	var accountOauth db.AccountOauth
@@ -63,7 +64,8 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 		if err := tx.Create(&account).Error; err != nil {
 			tx.Callback()
-			panic(accountException.OauthVerificationFail())
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+			return
 		}
 		// 尝试获取头像信息 (但github现阶段墙了头像)
 		if response, err := utils.Requests("GET", *userInfo.AvatarURL, nil); err == nil && response.StatusCode == http.StatusOK {
@@ -74,7 +76,8 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 			}
 			if err := tx.Save(&account).Error; err != nil {
 				tx.Callback()
-				panic(accountException.OauthVerificationFail())
+				ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+				return
 			}
 		}
 		// 绑定关联
@@ -87,15 +90,17 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		if err := tx.Create(&accountOauth).Error; err != nil {
 			tx.Callback()
-			panic(accountException.OauthVerificationFail())
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+			return
 		}
 		tx.Commit()
 	}
 	// 不管是第几次都直接给登录态
 	auth.SetSession(accountOauth.AccountId)
 	auth.SetCookie(accountOauth.AccountId)
-	ctx.JSON(iris.Map {
-		"id": accountOauth.AccountId,
-		"callback": state,
-	})
+	if len(state) > 0 {
+		ctx.Redirect(state, http.StatusOK)
+	} else {
+		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.SuccessUrl, http.StatusOK)
+	}
 }

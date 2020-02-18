@@ -128,6 +128,12 @@ type github struct {
 	// 回调地址
 	RedirectUrl string `json:"redirect_url" yaml:"redirect_url"`
 
+	// 验证成功回调地址
+	SuccessUrl string `json:"success_url" yaml:"success_url"`
+
+	// 验证失败回调地址
+	ErrorUrl string `json:"error_url" yaml:"error_url"`
+
 	// oauth配置
 	Oauth2Config oauth2.Config
 }
