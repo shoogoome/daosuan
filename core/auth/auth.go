@@ -128,7 +128,7 @@ func (r *daosuanAuthAuthorization) SetSession(aid int) {
 	session := sess.Start(r.Context)
 
 	if aid == 0 {
-		session.Set(constants.DaoSuanSessionName, "")
+		session.Delete(constants.DaoSuanSessionName)
 		return
 	}
 	payload := GenerateToken(aid, constants.DaoSuanSessionExpires)
@@ -139,7 +139,7 @@ func (r *daosuanAuthAuthorization) SetSession(aid int) {
 // 设置cookie
 func (r *daosuanAuthAuthorization) SetCookie(aid int) {
 	if aid == 0 {
-		r.Context.SetCookieKV(constants.DaoSuanSessionName, "")
+		r.Context.RemoveCookie(constants.DaoSuanSessionName)
 		return
 	}
 	payload := GenerateToken(aid, constants.DaoSuanCookieExpires)

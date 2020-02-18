@@ -151,6 +151,7 @@ func GitHubCallback(ctx iris.Context) {
 		Value: authbase.GenerateToken(accountOauth.AccountId, constants.DaoSuanSessionExpires),
 		Domain: utils.GlobalConfig.Oauth.GitHub.CookieDomain,
 		Path: "/",
+		MaxAge: constants.DaoSuanCookieExpires,
 	}
 	logUtils.Println(cookie.String())
 	ctx.SetCookie(&cookie)
