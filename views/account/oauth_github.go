@@ -90,6 +90,11 @@ func GitHubCallback(ctx iris.Context) {
 		First(&accountOauth).Error; err != nil || accountOauth.Id == 0 {
 		// 找不到这个账户并且想绑定则直接绑定
 		if jwt.Type == accountEnums.GitHubBinding {
+			if jwt.AccountId == 0 {
+				logUtils.Println("没有用户id")
+				ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
+				return
+			}
 			aid := createOauth(db.Driver.DB, jwt.AccountId, int(*userInfo.ID), string(userinfo))
 			if aid == 0 {
 				logUtils.Println("错误8")
@@ -145,8 +150,9 @@ func GitHubCallback(ctx iris.Context) {
 		Name: constants.DaoSuanSessionName,
 		Value: authbase.GenerateToken(accountOauth.AccountId, constants.DaoSuanSessionExpires),
 		Domain: utils.GlobalConfig.Oauth.GitHub.CookieDomain,
+		Path: "/",
 	}
-
+	logUtils.Println(cookie.String())
 	ctx.SetCookie(&cookie)
 	logUtils.Println("奥利给")
 	ctx.Redirect(jwt.Referer, http.StatusFound)
