@@ -5,9 +5,11 @@ import (
 	"daosuan/enums/account"
 	accountException "daosuan/exceptions/account"
 	"daosuan/models/db"
+	"daosuan/utils"
 	"daosuan/utils/hash"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/sessions"
+	"net/http"
 	"time"
 )
 
@@ -140,6 +142,14 @@ func (r *daosuanAuthAuthorization) SetSession(aid int) {
 func (r *daosuanAuthAuthorization) SetCookie(aid int) {
 	if aid == 0 {
 		r.Context.RemoveCookie(constants.DaoSuanSessionName)
+		// 删除oauth登录的cookit
+		cookie := http.Cookie{
+			Name: constants.DaoSuanSessionName,
+			Domain: utils.GlobalConfig.Oauth.GitHub.CookieDomain,
+			Path: "/",
+			MaxAge: -1,
+		}
+		r.Context.SetCookie(&cookie)
 		return
 	}
 	payload := GenerateToken(aid, constants.DaoSuanCookieExpires)
