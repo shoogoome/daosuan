@@ -125,6 +125,9 @@ type github struct {
 	// client secret
 	ClientSecret string `json:"client_secret" yaml:"client_secret"`
 
+	// Cookie domain
+	CookieDomain string `json:"cookie_domain" yaml:"cookie_domain"`
+
 	// 回调地址
 	RedirectUrl string `json:"redirect_url" yaml:"redirect_url"`
 

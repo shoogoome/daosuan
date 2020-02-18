@@ -2,11 +2,13 @@ package account
 
 import (
 	"context"
+	"daosuan/constants"
 	"daosuan/core/auth"
 	"daosuan/enums/account"
 	resourceLogic "daosuan/logics/resource"
 	"daosuan/models/db"
 	"daosuan/utils"
+	"daosuan/utils/hash"
 	"daosuan/utils/log"
 	"encoding/json"
 	"fmt"
@@ -15,28 +17,46 @@ import (
 	"github.com/kataras/iris"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 )
 
+type stateJWT struct {
+	Referer string `json:"referer"`
+	Type int `json:"type"`
+	AccountId int `json:"account_id"`
+}
+
+
 // 获取验证路由
-func GitHubGetAuthUrl(ctx iris.Context) {
+func GitHubGetAuthUrl(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	referer := ctx.URLParam("referer")
 	_type := ctx.URLParamIntDefault("type", accountEnums.GitHubLogging)
-	if len(referer) > 0 {
-		referer = url.QueryEscape(fmt.Sprintf("%s:::%d", referer, _type))
-	} else {
-		referer = url.QueryEscape(fmt.Sprintf("%s:::%d", utils.GlobalConfig.Oauth.GitHub.SuccessUrl, _type))
+
+	token := stateJWT {
+		Type: _type,
 	}
+	if len(referer) > 0 {
+		token.Referer = referer
+	} else {
+		token.Referer = utils.GlobalConfig.Oauth.GitHub.SuccessUrl
+	}
+	if auth.IsLogin() {
+		token.AccountId = auth.AccountModel().Id
+	}
+
 	ctx.JSON(iris.Map{
-		"url": utils.GlobalConfig.Oauth.GitHub.Oauth2Config.AuthCodeURL(referer),
+		"url": utils.GlobalConfig.Oauth.GitHub.Oauth2Config.AuthCodeURL(hash.GenerateToken(token, true)),
 	})
 }
 
 // github验证回调路由
-func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
-
+func GitHubCallback(ctx iris.Context) {
+	defer func() {
+		if err := recover(); err != nil {
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
+			return
+		}
+	}()
 	state := ctx.URLParam("state")
 	code := ctx.URLParam("code")
 
@@ -58,13 +78,10 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
-	state, err = url.QueryUnescape(state)
-	stateSplit := strings.Split(state, ":::")
-	if len(stateSplit) != 2 {
-		logUtils.Println("错误")
-		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
-		return
-	}
+
+	var jwt stateJWT
+	hash.DecodeToken(state, &jwt)
+
 	userinfo, _ := json.Marshal(userInfo)
 	// 登录
 	var accountOauth db.AccountOauth
@@ -72,16 +89,15 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		Where("model = ? and open_id = ?", accountEnums.OauthGitHub, strconv.Itoa(int(*userInfo.ID))).
 		First(&accountOauth).Error; err != nil || accountOauth.Id == 0 {
 		// 找不到这个账户并且想绑定则直接绑定
-		if stateSplit[1] == strconv.Itoa(accountEnums.GitHubBinding) {
-			auth.CheckLogin()
-			aid := createOauth(db.Driver.DB, auth.AccountModel().Id, int(*userInfo.ID), string(userinfo))
+		if jwt.Type == accountEnums.GitHubBinding {
+			aid := createOauth(db.Driver.DB, jwt.AccountId, int(*userInfo.ID), string(userinfo))
 			if aid == 0 {
 				logUtils.Println("错误8")
 				ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 				return
 			}
 			logUtils.Println("错误9")
-			ctx.Redirect(stateSplit[0], http.StatusFound)
+			ctx.Redirect(jwt.Referer, http.StatusFound)
 			return
 
 		}
@@ -118,17 +134,22 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		tx.Commit()
 		accountOauth.AccountId = aid
 	// 找到了这个账户并且他是想要绑定的话
-	} else if stateSplit[1] == strconv.Itoa(accountEnums.GitHubBinding) {
+	} else if jwt.Type == accountEnums.GitHubBinding {
 		// 如果存在这个账号并且想绑定他则直接抛异常（提示去账号合并）
 		logUtils.Println("错误4")
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
-	// 不管是第几次都直接给登录态
-	auth.SetSession(accountOauth.AccountId)
-	auth.SetCookie(accountOauth.AccountId)
+
+	cookie := http.Cookie{
+		Name: constants.DaoSuanSessionName,
+		Value: authbase.GenerateToken(accountOauth.AccountId, constants.DaoSuanSessionExpires),
+		Domain: utils.GlobalConfig.Oauth.GitHub.CookieDomain,
+	}
+
+	ctx.SetCookie(&cookie)
 	logUtils.Println("奥利给")
-	ctx.Redirect(stateSplit[0], http.StatusFound)
+	ctx.Redirect(jwt.Referer, http.StatusFound)
 }
 
 // 绑定

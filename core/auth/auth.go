@@ -131,7 +131,7 @@ func (r *daosuanAuthAuthorization) SetSession(aid int) {
 		session.Set(constants.DaoSuanSessionName, "")
 		return
 	}
-	payload := generateToken(aid, constants.DaoSuanSessionExpires)
+	payload := GenerateToken(aid, constants.DaoSuanSessionExpires)
 	session.Set(constants.DaoSuanSessionName, payload)
 
 }
@@ -142,7 +142,7 @@ func (r *daosuanAuthAuthorization) SetCookie(aid int) {
 		r.Context.SetCookieKV(constants.DaoSuanSessionName, "")
 		return
 	}
-	payload := generateToken(aid, constants.DaoSuanCookieExpires)
+	payload := GenerateToken(aid, constants.DaoSuanCookieExpires)
 	r.Context.SetCookieKV(constants.DaoSuanSessionName, payload)
 }
 
@@ -156,7 +156,7 @@ func (r *daosuanAuthAuthorization) fetchAccount(aid int) bool {
 }
 
 // 生成token
-func generateToken(aid int, expire int64) string {
+func GenerateToken(aid int, expire int64) string {
 	payload := cookieInfo{
 		AccountId:  aid,
 		ExpireTime: expire + time.Now().Unix(),
