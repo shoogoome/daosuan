@@ -25,7 +25,7 @@ type Account struct {
 	Password string `json:"password"`
 
 	// 通过第三方进来的，首次设定密码不需要给旧密码
-	Init bool `json:"init" gorm:"default:false;not null"`
+	Init bool `json:"init" gorm:"default:false"`
 
 	// 邮箱
 	Email string `json:"email"`
