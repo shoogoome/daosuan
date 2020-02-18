@@ -85,6 +85,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 			tx.Callback()
 			panic(accountException.OauthVerificationFail())
 		}
+		tx.Commit()
 	}
 	// 不管是第几次都直接给登录态
 	auth.SetSession(accountOauth.AccountId)
