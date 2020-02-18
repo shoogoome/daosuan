@@ -79,13 +79,13 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		// 绑定关联
 		userinfo, _ := json.Marshal(userInfo)
-		oauth := db.AccountOauth{
+		accountOauth = db.AccountOauth{
 			AccountId: account.Id,
 			Model: accountEnums.OauthGitHub,
 			OpenId: strconv.Itoa(int(*userInfo.ID)),
 			UserInfo: string(userinfo),
 		}
-		if err := tx.Create(&oauth).Error; err != nil {
+		if err := tx.Create(&accountOauth).Error; err != nil {
 			tx.Callback()
 			panic(accountException.OauthVerificationFail())
 		}
@@ -95,7 +95,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	auth.SetSession(accountOauth.AccountId)
 	auth.SetCookie(accountOauth.AccountId)
 	ctx.JSON(iris.Map {
-		"status": "success",
+		"id": accountOauth.AccountId,
 		"callback": state,
 	})
 }
