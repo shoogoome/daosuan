@@ -8,7 +8,6 @@ import (
 	resourceLogic "daosuan/logics/resource"
 	"daosuan/models/db"
 	"daosuan/utils"
-	"daosuan/utils/log"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/github"
@@ -48,8 +47,6 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	if err != nil || userInfo == nil {
 		panic(accountException.OauthVerificationFail())
 	}
-	a, b := json.Marshal(userInfo)
-	logUtils.Println(string(a), b, state)
 
 	var accountOauth db.AccountOauth
 	// 第一次登录
@@ -94,5 +91,6 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	auth.SetCookie(accountOauth.AccountId)
 	ctx.JSON(iris.Map {
 		"status": "success",
+		"callback": state,
 	})
 }
