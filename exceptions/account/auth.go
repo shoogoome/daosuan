@@ -19,3 +19,11 @@ func NoPermission() models.RestfulAPIResult {
 		Message: "无权限执行此操作",
 	}
 }
+
+func OauthVerificationFail() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5302,
+		Message: "验证失败",
+	}
+}

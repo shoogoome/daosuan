@@ -28,4 +28,7 @@ func RegisterAccountRouters(app *iris.Application) {
 	accountRouter.Get("/{aid:int}/follow", hero.Handler(account.Following))
 	accountRouter.Get("/{aid:int}/cancel_follow", hero.Handler(account.CancelFollowing))
 
+	// oauth验证
+	accountRouter.Get("/oauth/github/auth_url", hero.Handler(account.GitHubGetAuthUrl))
+	accountRouter.Get("/oauth/github/callback", hero.Handler(account.GitHubCallback))
 }

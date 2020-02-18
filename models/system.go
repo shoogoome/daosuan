@@ -1,5 +1,7 @@
 package models
 
+import "golang.org/x/oauth2"
+
 type SystemConfiguration struct {
 
 	// 数据库配置
@@ -19,6 +21,9 @@ type SystemConfiguration struct {
 
 	// elasticsearch配置
 	Elasticsearch elasticsearch `json:"elasticsearch" yaml:"elasticsearch"`
+
+	// Oauth
+	Oauth oauth `json:"oauth" yaml:"oauth"`
 }
 
 
@@ -103,4 +108,27 @@ type elasticsearch struct {
 
 	// port
 	Port int `json:"port" yaml:"port"`
+}
+
+
+type oauth struct {
+
+	// github验证
+	GitHub github `json:"github" yaml:"github"`
+
+	// 微信验证
+}
+
+type github struct {
+	// client id
+	ClientId string `json:"client_id" yaml:"client_id"`
+
+	// client secret
+	ClientSecret string `json:"client_secret" yaml:"client_secret"`
+
+	// 回调地址
+	RedirectUrl string `json:"redirect_url" yaml:"redirect_url"`
+
+	// oauth配置
+	Oauth2Config oauth2.Config
 }
