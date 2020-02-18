@@ -110,7 +110,6 @@ type elasticsearch struct {
 	Port int `json:"port" yaml:"port"`
 }
 
-
 type oauth struct {
 
 	// github验证
