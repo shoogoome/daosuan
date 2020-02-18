@@ -25,9 +25,9 @@ func GitHubGetAuthUrl(ctx iris.Context) {
 	referer := ctx.URLParam("referer")
 	_type := ctx.URLParamIntDefault("type", accountEnums.GitHubLogging)
 	if len(referer) > 0 {
-		referer = url.QueryEscape(fmt.Sprintf("%s:%d", referer, _type))
+		referer = url.QueryEscape(fmt.Sprintf("%s:::%d", referer, _type))
 	} else {
-		referer = url.QueryEscape(fmt.Sprintf("%s:%d", utils.GlobalConfig.Oauth.GitHub.SuccessUrl, _type))
+		referer = url.QueryEscape(fmt.Sprintf("%s:::%d", utils.GlobalConfig.Oauth.GitHub.SuccessUrl, _type))
 	}
 	ctx.JSON(iris.Map{
 		"url": utils.GlobalConfig.Oauth.GitHub.Oauth2Config.AuthCodeURL(referer),
@@ -59,7 +59,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		return
 	}
 	state, err = url.QueryUnescape(state)
-	stateSplit := strings.Split(state, ":")
+	stateSplit := strings.Split(state, ":::")
 	//logUtils.Println(url.QueryUnescape(state))
 	logUtils.Println(state, stateSplit)
 	if len(stateSplit) != 2 {
