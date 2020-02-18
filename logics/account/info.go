@@ -15,7 +15,7 @@ import (
 
 var field = []string{
 	"Nickname", "Email", "Id", "Role", "Phone", "PhoneValidated", "UpdateTime",
-	"EmailValidated", "Avator", "Motto", "CreateTime",
+	"EmailValidated", "Avator", "Motto", "CreateTime", "Init",
 }
 
 type follow struct {

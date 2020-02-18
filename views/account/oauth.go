@@ -60,6 +60,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		account := db.Account{
 			Nickname: *userInfo.Login,
 			Role: accountEnums.RoleUser,
+			Init: true,
 		}
 
 		if err := tx.Create(&account).Error; err != nil {

@@ -104,13 +104,15 @@ func PutAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid in
 
 	if params.Has("new_password") {
 		newPassword := params.Str("new_password", "旧密码")
-		if !auth.IsAdmin() {
+		// 第三方进来的第一次修改密码不用提供旧密码
+		if !auth.IsAdmin() && !account.Init {
 			oldPassword := params.Str("old_password", "旧密码")
 			if hash.PasswordSignature(oldPassword) != account.Password {
 				panic(accountException.OldPasswordIsNotTrue())
 			}
 		}
 		account.Password = hash.PasswordSignature(newPassword)
+		account.Init = false
 	}
 
 	if params.Has("avator") {
