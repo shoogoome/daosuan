@@ -62,24 +62,16 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		return
 	}
 	userinfo, _ := json.Marshal(userInfo)
-	// 如果是绑定的话
-	if stateSplit[1] == strconv.Itoa(accountEnums.GitHubBinding){
-		auth.CheckLogin()
-		aid := createOauth(db.Driver.DB, auth.AccountModel().Id, int(*userInfo.ID), string(userinfo))
-		if aid == 0 {
-			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
-			return
-		}
-		ctx.Redirect(stateSplit[0], http.StatusFound)
-		return
-	}
-
 	// 登录
 	var accountOauth db.AccountOauth
-	// 第一次登录
 	if err := db.Driver.
 		Where("model = ? and open_id = ?", accountEnums.OauthGitHub, userInfo.ID).
 		First(&accountOauth).Error; err != nil || accountOauth.Id == 0 {
+		// 如果存在这个账号并且想绑定他则直接抛异常（提示去账号合并）
+		if stateSplit[1] == strconv.Itoa(accountEnums.GitHubBinding){
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
+			return
+		}
 
 		tx := db.Driver.Begin()
 		// 创建用户
@@ -109,6 +101,16 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		tx.Commit()
 		accountOauth.AccountId = aid
+	// 找不到这个账户并且想绑定则直接绑定
+	} else if stateSplit[1] == strconv.Itoa(accountEnums.GitHubBinding) {
+		auth.CheckLogin()
+		aid := createOauth(db.Driver.DB, auth.AccountModel().Id, int(*userInfo.ID), string(userinfo))
+		if aid == 0 {
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
+			return
+		}
+		ctx.Redirect(stateSplit[0], http.StatusFound)
+		return
 	}
 	// 不管是第几次都直接给登录态
 	auth.SetSession(accountOauth.AccountId)
