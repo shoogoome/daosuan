@@ -53,7 +53,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	// 第一次登录
 	if err := db.Driver.
 		Where("model = ? and open_id = ?", accountEnums.OauthGitHub, userInfo.ID).
-		First(&accountOauth); err != nil || accountOauth.Id == 0 {
+		First(&accountOauth).Error; err != nil || accountOauth.Id == 0 {
 
 		tx := db.Driver.Begin()
 		// 创建用户
