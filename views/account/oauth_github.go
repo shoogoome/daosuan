@@ -58,9 +58,12 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
-
+	state, err = url.QueryUnescape(state)
 	stateSplit := strings.Split(state, ":")
+	//logUtils.Println(url.QueryUnescape(state))
+	logUtils.Println(state, stateSplit)
 	if len(stateSplit) != 2 {
+
 		logUtils.Println("错误")
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
