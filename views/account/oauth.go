@@ -37,7 +37,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	token, err := utils.GlobalConfig.Oauth.GitHub.Oauth2Config.Exchange(context.Background(), code)
 
 	if err != nil {
-		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
 	oauth2Client := utils.GlobalConfig.Oauth.GitHub.Oauth2Config.Client(context.Background(), token)
@@ -45,7 +45,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	userInfo, _, err := client.Users.Get(context.Background(), "")
 
 	if err != nil || userInfo == nil {
-		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
 
@@ -65,7 +65,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 		if err := tx.Create(&account).Error; err != nil {
 			tx.Callback()
-			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 			return
 		}
 		// 尝试获取头像信息 (但github现阶段墙了头像)
@@ -77,7 +77,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 			}
 			if err := tx.Save(&account).Error; err != nil {
 				tx.Callback()
-				ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+				ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 				return
 			}
 		}
@@ -91,7 +91,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		}
 		if err := tx.Create(&accountOauth).Error; err != nil {
 			tx.Callback()
-			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusBadGateway)
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 			return
 		}
 		tx.Commit()
@@ -100,8 +100,8 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	auth.SetSession(accountOauth.AccountId)
 	auth.SetCookie(accountOauth.AccountId)
 	if len(state) > 0 {
-		ctx.Redirect(state, http.StatusOK)
+		ctx.Redirect(state, http.StatusFound)
 	} else {
-		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.SuccessUrl, http.StatusOK)
+		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.SuccessUrl, http.StatusFound)
 	}
 }
