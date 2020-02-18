@@ -22,7 +22,7 @@ type Account struct {
 	PhoneValidated bool `json:"phone_validated" gorm:"default:false"`
 
 	// 密码
-	Password string `json:"password" gorm:"not null"`
+	Password string `json:"password"`
 
 	// 邮箱
 	Email string `json:"email"`
@@ -86,7 +86,7 @@ type AccountOauth struct {
 	// 关联模块
 	Model int16 `json:"model"`
 
-	// openid
+	// openid   github 走id   微信走openid
 	OpenId string `json:"open_id"`
 
 	// 用户信息
