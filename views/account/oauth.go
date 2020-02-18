@@ -42,5 +42,6 @@ func GitHubCallback(ctx iris.Context) {
 	}
 
 	logUtils.Println(json.Marshal(userInfo))
+	logUtils.Println(state)
 
 }
