@@ -40,8 +40,8 @@ func GitHubCallback(ctx iris.Context) {
 	if err != nil || userInfo == nil {
 		panic(accountException.OauthVerificationFail())
 	}
-
-	logUtils.Println(json.Marshal(userInfo))
-	logUtils.Println(state)
+	a, b := json.Marshal(userInfo)
+	logUtils.Println(string(a), b, state)
+	//logUtils.Println(state)
 
 }

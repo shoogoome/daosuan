@@ -21,7 +21,7 @@ func InitGlobal() {
 	}
 
 	// 初始化github oauth配置
-	GlobalConfig.Oauth.GitHub.Oauth2Config = oauth2.Config{
+	GlobalConfig.Oauth.GitHub.Oauth2Config = oauth2.Config {
 		ClientID:     GlobalConfig.Oauth.GitHub.ClientId,
 		ClientSecret: GlobalConfig.Oauth.GitHub.ClientSecret,
 		Endpoint: oauth2.Endpoint{
