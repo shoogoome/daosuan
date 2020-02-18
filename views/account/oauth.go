@@ -60,6 +60,11 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 			Nickname: *userInfo.Login,
 			Role: accountEnums.RoleUser,
 		}
+
+		if err := tx.Create(&account).Error; err != nil {
+			tx.Callback()
+			panic(accountException.OauthVerificationFail())
+		}
 		// 尝试获取头像信息 (但github现阶段墙了头像)
 		if response, err := utils.Requests("GET", *userInfo.AvatarURL, nil); err == nil && response.StatusCode == http.StatusOK {
 			if body, err := ioutil.ReadAll(response.Body); err == nil {
@@ -67,15 +72,10 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 				logic := resourceLogic.NewReousrcesLocalStorage("account_avator")
 				account.Avator = logic.SaveFile(fmt.Sprintf("%d/%s", account.Id, "avator.jpg"), body, true)
 			}
-			//if err := tx.Save(&account).Error; err != nil {
-			//	tx.Callback()
-			//	panic(accountException.OauthVerificationFail())
-			//}
-		}
-
-		if err := tx.Create(&account).Error; err != nil {
-			tx.Callback()
-			panic(accountException.OauthVerificationFail())
+			if err := tx.Save(&account).Error; err != nil {
+				tx.Callback()
+				panic(accountException.OauthVerificationFail())
+			}
 		}
 		// 绑定关联
 		userinfo, _ := json.Marshal(userInfo)
