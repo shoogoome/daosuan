@@ -10,18 +10,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/github"
+	"github.com/jinzhu/gorm"
 	"github.com/kataras/iris"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 // 获取验证路由
 func GitHubGetAuthUrl(ctx iris.Context) {
 	referer := ctx.URLParam("referer")
+	_type := ctx.URLParamIntDefault("type", accountEnums.GitHubLogging)
 	if len(referer) > 0 {
-		referer = url.QueryEscape(referer)
+		referer = url.QueryEscape(fmt.Sprintf("%s:%d", referer, _type))
+	} else {
+		referer = url.QueryEscape(fmt.Sprintf("%s:%d", utils.GlobalConfig.Oauth.GitHub.SuccessUrl, _type))
 	}
 	ctx.JSON(iris.Map{
 		"url": utils.GlobalConfig.Oauth.GitHub.Oauth2Config.AuthCodeURL(referer),
@@ -34,12 +39,14 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	state := ctx.URLParam("state")
 	code := ctx.URLParam("code")
 
+	// 获取token
 	token, err := utils.GlobalConfig.Oauth.GitHub.Oauth2Config.Exchange(context.Background(), code)
 
 	if err != nil {
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
+	// 验证
 	oauth2Client := utils.GlobalConfig.Oauth.GitHub.Oauth2Config.Client(context.Background(), token)
 	client := github.NewClient(oauth2Client)
 	userInfo, _, err := client.Users.Get(context.Background(), "")
@@ -49,6 +56,25 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		return
 	}
 
+	stateSplit := strings.Split(state, ":")
+	if len(stateSplit)  != 2 {
+		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
+		return
+	}
+	userinfo, _ := json.Marshal(userInfo)
+	// 如果是绑定的话
+	if stateSplit[1] == strconv.Itoa(accountEnums.GitHubBinding){
+		auth.CheckLogin()
+		aid := createOauth(db.Driver.DB, auth.AccountModel().Id, int(*userInfo.ID), string(userinfo))
+		if aid == 0 {
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
+			return
+		}
+		ctx.Redirect(stateSplit[0], http.StatusFound)
+		return
+	}
+
+	// 登录
 	var accountOauth db.AccountOauth
 	// 第一次登录
 	if err := db.Driver.
@@ -69,32 +95,20 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 			return
 		}
 		// 尝试获取头像信息 (但github现阶段墙了头像)
-		if response, err := utils.Requests("GET", *userInfo.AvatarURL, nil); err == nil && response.StatusCode == http.StatusOK {
-			if body, err := ioutil.ReadAll(response.Body); err == nil {
-				defer response.Body.Close()
-				logic := resourceLogic.NewReousrcesLocalStorage("account_avator")
-				account.Avator = logic.SaveFile(fmt.Sprintf("%d/%s", account.Id, "avator.jpg"), body, true)
-			}
-			if err := tx.Save(&account).Error; err != nil {
-				tx.Callback()
-				ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
-				return
-			}
+		if !getAvator(tx, *userInfo.AvatarURL, &account) {
+			tx.Callback()
+			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
+			return
 		}
 		// 绑定关联
-		userinfo, _ := json.Marshal(userInfo)
-		accountOauth = db.AccountOauth{
-			AccountId: account.Id,
-			Model: accountEnums.OauthGitHub,
-			OpenId: strconv.Itoa(int(*userInfo.ID)),
-			UserInfo: string(userinfo),
-		}
-		if err := tx.Create(&accountOauth).Error; err != nil {
+		aid := createOauth(tx, account.Id, int(*userInfo.ID), string(userinfo))
+		if aid == 0 {
 			tx.Callback()
 			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 			return
 		}
 		tx.Commit()
+		accountOauth.AccountId = aid
 	}
 	// 不管是第几次都直接给登录态
 	auth.SetSession(accountOauth.AccountId)
@@ -104,4 +118,33 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	} else {
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.SuccessUrl, http.StatusFound)
 	}
+}
+
+// 绑定
+func createOauth (tx *gorm.DB, aid, openid int, userinfo string) int {
+	accountOauth := db.AccountOauth{
+		AccountId: aid,
+		Model: accountEnums.OauthGitHub,
+		OpenId: strconv.Itoa(openid),
+		UserInfo: userinfo,
+	}
+	if err := tx.Create(&accountOauth).Error; err != nil {
+		return 0
+	}
+	return accountOauth.Id
+}
+
+// 获取头像数据
+func getAvator(tx *gorm.DB, url string, account *db.Account) bool {
+	if response, err := utils.Requests("GET", url, nil); err == nil && response.StatusCode == http.StatusOK {
+		if body, err := ioutil.ReadAll(response.Body); err == nil {
+			defer response.Body.Close()
+			logic := resourceLogic.NewReousrcesLocalStorage("account_avator")
+			account.Avator = logic.SaveFile(fmt.Sprintf("%d/%s", account.Id, "avator.jpg"), body, true)
+		}
+		if err := tx.Save(&account).Error; err != nil {
+			return false
+		}
+	}
+	return true
 }
