@@ -7,6 +7,7 @@ import (
 	resourceLogic "daosuan/logics/resource"
 	"daosuan/models/db"
 	"daosuan/utils"
+	"daosuan/utils/log"
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/github"
@@ -43,6 +44,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	token, err := utils.GlobalConfig.Oauth.GitHub.Oauth2Config.Exchange(context.Background(), code)
 
 	if err != nil {
+		logUtils.Println("错误3")
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
@@ -52,12 +54,14 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	userInfo, _, err := client.Users.Get(context.Background(), "")
 
 	if err != nil || userInfo == nil {
+		logUtils.Println("错误2")
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
 
 	stateSplit := strings.Split(state, ":")
-	if len(stateSplit)  != 2 {
+	if len(stateSplit) != 2 {
+		logUtils.Println("错误")
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
@@ -69,6 +73,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		First(&accountOauth).Error; err != nil || accountOauth.Id == 0 {
 		// 如果存在这个账号并且想绑定他则直接抛异常（提示去账号合并）
 		if stateSplit[1] == strconv.Itoa(accountEnums.GitHubBinding){
+			logUtils.Println("错误4")
 			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 			return
 		}
@@ -83,12 +88,14 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 		if err := tx.Create(&account).Error; err != nil {
 			tx.Callback()
+			logUtils.Println("错误5")
 			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 			return
 		}
 		// 尝试获取头像信息 (但github现阶段墙了头像)
 		if !getAvator(tx, *userInfo.AvatarURL, &account) {
 			tx.Callback()
+			logUtils.Println("错误6")
 			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 			return
 		}
@@ -96,6 +103,7 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		aid := createOauth(tx, account.Id, int(*userInfo.ID), string(userinfo))
 		if aid == 0 {
 			tx.Callback()
+			logUtils.Println("错误7")
 			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 			return
 		}
@@ -106,20 +114,19 @@ func GitHubCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		auth.CheckLogin()
 		aid := createOauth(db.Driver.DB, auth.AccountModel().Id, int(*userInfo.ID), string(userinfo))
 		if aid == 0 {
+			logUtils.Println("错误8")
 			ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 			return
 		}
+		logUtils.Println("错误9")
 		ctx.Redirect(stateSplit[0], http.StatusFound)
 		return
 	}
 	// 不管是第几次都直接给登录态
 	auth.SetSession(accountOauth.AccountId)
 	auth.SetCookie(accountOauth.AccountId)
-	if len(state) > 0 {
-		ctx.Redirect(state, http.StatusFound)
-	} else {
-		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.SuccessUrl, http.StatusFound)
-	}
+	logUtils.Println("奥利给")
+	ctx.Redirect(state, http.StatusFound)
 }
 
 // 绑定
