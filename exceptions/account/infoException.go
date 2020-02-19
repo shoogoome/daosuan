@@ -75,3 +75,11 @@ func NicknameExists() models.RestfulAPIResult {
 		Message: "昵称存在",
 	}
 }
+
+func OperationFail() models.RestfulAPIResult {
+	return models.RestfulAPIResult{
+		Status: false,
+		ErrCode: 5309,
+		Message: "操作失败",
+	}
+}

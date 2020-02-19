@@ -13,7 +13,7 @@ func FollowingFail() models.RestfulAPIResult {
 func CancelFollowingFail() models.RestfulAPIResult {
 	return models.RestfulAPIResult{
 		Status: false,
-		ErrCode: 5307,
+		ErrCode: 5308,
 		Message: "取消关注失败",
 	}
 }

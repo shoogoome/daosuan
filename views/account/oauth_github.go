@@ -153,7 +153,7 @@ func GitHubCallback(ctx iris.Context) {
 		Path: "/",
 		MaxAge: constants.DaoSuanCookieExpires,
 	}
-	logUtils.Println(cookie.String())
+
 	ctx.SetCookie(&cookie)
 	logUtils.Println("奥利给")
 	ctx.Redirect(jwt.Referer, http.StatusFound)

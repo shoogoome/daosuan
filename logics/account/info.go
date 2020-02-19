@@ -144,6 +144,17 @@ func (a *AccountLogic) GetProduct() []dto.ProductList {
 	return lists
 }
 
+// 获取已验证的第三方
+func (a *AccountLogic) GetOauth() []int {
+
+	var oauth []int
+	db.Driver.
+		Table("account_oauth").
+		Where("account_id = ?", a.account.Id).
+		Select("model").Find(&oauth)
+	return oauth
+}
+
 
 // 检测昵称是否存在
 func IsNicknameExists(nickname string) bool {
