@@ -148,10 +148,17 @@ func (a *AccountLogic) GetProduct() []dto.ProductList {
 func (a *AccountLogic) GetOauth() []int {
 
 	var oauth []int
-	db.Driver.
+	if rows, err := db.Driver.
 		Table("account_oauth").
 		Where("account_id = ?", a.account.Id).
-		Select("model").Find(&oauth)
+		Select("model").Rows(); err == nil {
+			for rows.Next() {
+				var model int
+				if err := rows.Scan(&model); err == nil {
+					oauth = append(oauth, model)
+				}
+			}
+	}
 	return oauth
 }
 
