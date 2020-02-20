@@ -43,10 +43,7 @@ func GitHubGetAuthUrl(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) 
 	if auth.IsLogin() {
 		token.AccountId = auth.AccountModel().Id
 	}
-
-	ctx.JSON(iris.Map{
-		"url": utils.GlobalConfig.Oauth.GitHub.Oauth2Config.AuthCodeURL(hash.GenerateToken(token, true)),
-	})
+	ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.Oauth2Config.AuthCodeURL(hash.GenerateToken(token, true)), http.StatusFound)
 }
 
 // github验证回调路由
