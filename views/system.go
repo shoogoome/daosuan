@@ -19,4 +19,7 @@ func RegisterSystemRouters(app *iris.Application) {
 	systemRouter.Get("/load_config", hero.Handler(system.HeavyLoadConfig))
 	// 重建索引
 	systemRouter.Get("/reset_index", hero.Handler(system.ResetElasticsearchIndex))
+
+	// 微信验证
+	systemRouter.Get("/wechat_v", hero.Handler(system.WeChatV))
 }
