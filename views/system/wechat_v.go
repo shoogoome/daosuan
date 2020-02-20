@@ -14,7 +14,7 @@ func WeChatV(ctx iris.Context) {
 	signatureList := []string{
 		ctx.URLParam("timestamp"),
 		ctx.URLParam("nonce"),
-		ctx.URLParam("echostr")}
+		"jifohuebj32niqefojwhuigebn"}
 
 	sort.Strings(signatureList)
 
