@@ -1,7 +1,7 @@
 package models
 
 import (
-	"daosuan/utils/wechat"
+	wechat2 "github.com/shoogoome/gowechat"
 	"golang.org/x/oauth2"
 )
 
@@ -147,5 +147,5 @@ type github struct {
 
 type wechat struct {
 
-	OauthClient wecharUtils.WeCharClient
+	OauthClient wechat2.WeCharClient
 }

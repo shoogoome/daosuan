@@ -2,8 +2,8 @@ package utils
 
 import (
 	"daosuan/models"
-	"daosuan/utils/wechat"
 	"fmt"
+	wechat "github.com/shoogoome/gowechat"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -22,7 +22,7 @@ func InitGlobal() {
 	}
 
 	// 初始化github oauth配置
-	GlobalConfig.Oauth.GitHub.Oauth2Config = oauth2.Config {
+	GlobalConfig.Oauth.GitHub.Oauth2Config = oauth2.Config{
 		ClientID:     GlobalConfig.Oauth.GitHub.ClientId,
 		ClientSecret: GlobalConfig.Oauth.GitHub.ClientSecret,
 		Endpoint: oauth2.Endpoint{
@@ -34,10 +34,10 @@ func InitGlobal() {
 	}
 
 	// 初始化wechat oauth配置
-	GlobalConfig.Oauth.WeChat.OauthClient = wecharUtils.WeCharClient{
-		Appid: "wxbbf5d0d2fe30d53d",
-		Secret: "6e93d09a9eccb23ca520b9fe16a8ff6d",
+	GlobalConfig.Oauth.WeChat.OauthClient = wechat.WeCharClient{
+		Appid:       "wxbbf5d0d2fe30d53d",
+		Secret:      "6e93d09a9eccb23ca520b9fe16a8ff6d",
 		RedirectUri: "http://api.v1.daosuan.net/accounts/oauth/wechat/callback",
-		Scope: []string{"snsapi_userinfo"},
+		Scope:       []string{"snsapi_login"},
 	}
 }

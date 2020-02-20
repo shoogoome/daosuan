@@ -14,7 +14,6 @@ func WeChatGetAuthUrl(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) 
 
 }
 
-
 func WeChatCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	code := ctx.URLParam("code")
@@ -29,8 +28,8 @@ func WeChatCallback(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
 	logUtils.Println(userInfo, err)
 
-	ctx.JSON(iris.Map {
-		"token": token,
+	ctx.JSON(iris.Map{
+		"token":    token,
 		"userinfo": userInfo,
 	})
 
