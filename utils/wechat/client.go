@@ -1,7 +1,6 @@
 package wecharUtils
 
 import (
-	"daosuan/utils"
 	"encoding/json"
 	"fmt"
 	"github.com/kataras/iris/core/errors"
@@ -26,7 +25,7 @@ func (w *WeCharClient) Exchange(code string) (AccessToken, error) {
 	reUrl := fmt.Sprintf(
 		"https://api.weixin.qq.com/sns/oauth2/access_token?appid=%s&secret=%s&code=%s&grant_type=authorization_code",
 		w.Appid, w.Scope, code)
-	if response, err := utils.Requests("GET", reUrl, nil); err == nil && response.StatusCode == http.StatusOK {
+	if response, err := Requests("GET", reUrl, nil); err == nil && response.StatusCode == http.StatusOK {
 
 		body := response.Body
 		defer body.Close()
@@ -45,7 +44,7 @@ func (w *WeCharClient) ReGetAccessToken(refreshToken string) (AccessToken, error
 	reUrl := fmt.Sprintf(
 		"https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=%s&grant_type=refresh_token&refresh_token=%s",
 		w.Appid, refreshToken)
-	if response, err := utils.Requests("GET", reUrl, nil); err == nil && response.StatusCode == http.StatusOK {
+	if response, err := Requests("GET", reUrl, nil); err == nil && response.StatusCode == http.StatusOK {
 
 		body := response.Body
 		defer body.Close()
@@ -66,7 +65,7 @@ func (w *WeCharClient) GetUserInfo(accessToken string, openId string, lang ...st
 	if len(lang) > 0 {
 		reUrl += fmt.Sprintf("&%s", lang[0])
 	}
-	if response, err := utils.Requests("GET", reUrl, nil); err == nil && response.StatusCode == http.StatusOK {
+	if response, err := Requests("GET", reUrl, nil); err == nil && response.StatusCode == http.StatusOK {
 
 		body := response.Body
 		defer body.Close()
