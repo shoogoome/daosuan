@@ -1,6 +1,9 @@
 package models
 
-import "golang.org/x/oauth2"
+import (
+	"daosuan/utils/wechat"
+	"golang.org/x/oauth2"
+)
 
 type SystemConfiguration struct {
 
@@ -116,6 +119,7 @@ type oauth struct {
 	GitHub github `json:"github" yaml:"github"`
 
 	// 微信验证
+	WeChat wechat
 }
 
 type github struct {
@@ -139,4 +143,9 @@ type github struct {
 
 	// oauth配置
 	Oauth2Config oauth2.Config
+}
+
+type wechat struct {
+
+	OauthClient wecharUtils.WeCharClient
 }

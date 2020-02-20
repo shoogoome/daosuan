@@ -30,6 +30,13 @@ func RegisterAccountRouters(app *iris.Application) {
 	accountRouter.Get("/{aid:int}/cancel_follow", hero.Handler(account.CancelFollowing))
 
 	// oauth验证
+
+	// github
 	accountRouter.Get("/oauth/github/auth_url", hero.Handler(account.GitHubGetAuthUrl))
 	accountRouter.Get("/oauth/github/callback", hero.Handler(account.GitHubCallback))
+
+	// wechat
+	accountRouter.Get("/oauth/wechat/auth_url", hero.Handler(account.WeChatGetAuthUrl))
+	accountRouter.Get("/oauth/wechat/callback", hero.Handler(account.WeChatCallback))
+
 }

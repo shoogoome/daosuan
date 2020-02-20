@@ -2,6 +2,7 @@ package utils
 
 import (
 	"daosuan/models"
+	"daosuan/utils/wechat"
 	"fmt"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
@@ -32,4 +33,11 @@ func InitGlobal() {
 		Scopes:      []string{"repo", "read:org", "read:user"},
 	}
 
+	// 初始化wechat oauth配置
+	GlobalConfig.Oauth.WeChat.OauthClient = wecharUtils.WeCharClient{
+		Appid: "wxbbf5d0d2fe30d53d",
+		Secret: "6e93d09a9eccb23ca520b9fe16a8ff6d",
+		RedirectUri: "http://api.v1.daosuan.net/accounts/oauth/wechat/callback",
+		Scope: []string{"snsapi_login"},
+	}
 }

@@ -5,7 +5,6 @@ type WeCharClient struct {
 	Secret           string   `json:"secret"`              // 应用密钥AppSecret，在微信开放平台提交应用审核通过后获得
 	RedirectUri      string   `json:"redirect_uri"`        // 回调地址
 	Scope            []string `json:"scope"`               // 应用授权作用域，拥有多个作用域用逗号（,）分隔，网页应用目前仅填写snsapi_login即
-	State            string   `json:"state"`               // 用于保持请求和回调的状态，授权请求后原样带回给第三方。该参数可用于防止csrf攻击（跨站请求伪造攻击），建议第三方带上该参数，可设置为简单的随机数加session进行校验
 }
 
 type AccessToken struct {
