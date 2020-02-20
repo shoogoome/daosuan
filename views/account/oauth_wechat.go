@@ -5,11 +5,12 @@ import (
 	"daosuan/utils"
 	"daosuan/utils/log"
 	"github.com/kataras/iris"
+	"net/http"
 )
 
 func WeChatGetAuthUrl(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
-	ctx.JSON(utils.GlobalConfig.Oauth.WeChat.OauthClient.AuthCodeUrl("123"))
+	ctx.Redirect(utils.GlobalConfig.Oauth.WeChat.OauthClient.AuthCodeUrl("123"), http.StatusFound)
 
 }
 
