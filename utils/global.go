@@ -38,6 +38,6 @@ func InitGlobal() {
 		Appid: "wxbbf5d0d2fe30d53d",
 		Secret: "6e93d09a9eccb23ca520b9fe16a8ff6d",
 		RedirectUri: "http://api.v1.daosuan.net/accounts/oauth/wechat/callback",
-		Scope: []string{"snsapi_base"},
+		Scope: []string{"snsapi_userinfo"},
 	}
 }
