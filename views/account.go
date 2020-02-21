@@ -16,7 +16,7 @@ func RegisterAccountRouters(app *iris.Application) {
 	accountRouter.Post("", hero.Handler(account.MgetAccountInfo))
 	accountRouter.Get("/list", hero.Handler(account.GetAccountList))
 	accountRouter.Post("/_mget", hero.Handler(account.MgetAccountInfo))
-	accountRouter.Post("/register", hero.Handler(account.Register))
+	accountRouter.Post("/register/email", hero.Handler(account.EmailRegister))
 	accountRouter.Get("/logout", hero.Handler(account.Logout))
 	accountRouter.Post("/unbind", hero.Handler(account.UnBind))
 	accountRouter.Post("/login/common", hero.Handler(account.CommonLogin))
@@ -38,5 +38,8 @@ func RegisterAccountRouters(app *iris.Application) {
 	// wechat
 	accountRouter.Get("/oauth/wechat/auth_url", hero.Handler(account.WeChatGetAuthUrl))
 	accountRouter.Get("/oauth/wechat/callback", hero.Handler(account.WeChatCallback))
+
+	// mail
+	accountRouter.Get("/v/email/send", hero.Handler(account.SendMail))
 
 }
