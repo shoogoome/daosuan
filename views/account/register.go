@@ -44,8 +44,10 @@ func EmailRegister(ctx iris.Context) {
 		if string(token) != vToken {
 			panic(accountException.OauthVerificationFail())
 		}
-		cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountVerificationEmail, email))
+	} else {
+		panic(accountException.OauthVerificationFail())
 	}
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountVerificationEmail, email))
 	// 昵称检查
 	if accountLogic.IsNicknameExists(nickname) {
 		panic(accountException.NicknameIsExists())

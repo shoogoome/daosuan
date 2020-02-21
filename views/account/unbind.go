@@ -16,7 +16,7 @@ func UnBind(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		panic(accountException.OperationFail())
 	}
 	var oauth db.AccountOauth
-	if err := db.Driver.Where("model = ? and account_id = ?", model, auth.AccountModel().Id).First(&oauth).Error; err != nil || oauth.Id == 0 {
+	if err := db.Driver.Where("model = ? and account_id = ?", model, auth.AccountModel().Id).First(&oauth).Error; err != nil {
 		panic(accountException.OperationFail())
 	}
 	db.Driver.Delete(oauth)

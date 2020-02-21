@@ -159,7 +159,7 @@ func (r *daosuanAuthAuthorization) SetCookie(aid int) {
 // 从数据库查找该用户
 func (r *daosuanAuthAuthorization) fetchAccount(aid int) bool {
 	err := db.Driver.GetOne("account", aid, &r.Account)
-	if err != nil || r.Account.Id == 0 {
+	if err != nil {
 		return false
 	}
 	return true

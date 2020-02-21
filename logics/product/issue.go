@@ -25,7 +25,7 @@ func NewIssueLogic(auth authbase.DaoSuanAuthAuthorization, pid int, iid ...int) 
 	}
 
 	if len(iid) > 0 {
-		if err := db.Driver.GetOne("issue", iid[0], &issue); err != nil || issue.Id == 0 || issue.ProductId != pid {
+		if err := db.Driver.GetOne("issue", iid[0], &issue); err != nil || issue.ProductId != pid {
 			panic(productException.IssueIsNotExists())
 		}
 	}

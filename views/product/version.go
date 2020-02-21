@@ -159,7 +159,7 @@ func CheckVersionName(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, 
 
 // 获取版本实体
 func getVersion(pid int, vid int, version *db.ProductVersion) {
-	if err := db.Driver.Where("product_id = ? and id = ?", pid, vid).First(&version).Error; err != nil || version.Id == 0 {
+	if err := db.Driver.Where("product_id = ? and id = ?", pid, vid).First(&version).Error; err != nil {
 		panic(productException.ProductVersionIsNotExists())
 	}
 }

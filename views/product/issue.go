@@ -82,7 +82,7 @@ func DeleteIssue(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid i
 	auth.CheckLogin()
 
 	var issue db.Issue
-	if err := db.Driver.Where("product_id = ? and id = ?", pid, iid).First(&issue).Error; err != nil || issue.Id == 0 {
+	if err := db.Driver.Where("product_id = ? and id = ?", pid, iid).First(&issue).Error; err != nil {
 		panic(productException.IssueIsNotExists())
 	}
 

@@ -50,7 +50,7 @@ func DeleteTag(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, tid int
 	auth.CheckAdmin()
 
 	var tag db.Tag
-	if err := db.Driver.First(&tag, tid).Error; err != nil || tag.Id == 0 {
+	if err := db.Driver.First(&tag, tid).Error; err != nil {
 		panic(tagException.TagIsNotExsits())
 	}
 

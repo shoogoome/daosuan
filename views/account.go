@@ -29,6 +29,8 @@ func RegisterAccountRouters(app *iris.Application) {
 	accountRouter.Get("/{aid:int}/follow", hero.Handler(account.Following))
 	accountRouter.Get("/{aid:int}/cancel_follow", hero.Handler(account.CancelFollowing))
 
+	// forget
+	accountRouter.Post("/forget/email", hero.Handler(account.ForGetPasswordEmail))
 	// oauth验证
 
 	// github

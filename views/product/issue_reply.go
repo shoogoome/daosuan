@@ -33,7 +33,7 @@ func ReplyIssue(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid, i
 			panic(productException.IsNotAllowAtSelf())
 		}
 		var atAccount db.Account
-		if err := db.Driver.GetOne("account", aid, &atAccount); err != nil || atAccount.Id == 0 {
+		if err := db.Driver.GetOne("account", aid, &atAccount); err != nil {
 			panic(productException.AtAccountIsNotFound())
 		}
 		reply.AtAccountId = aid

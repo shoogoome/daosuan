@@ -84,7 +84,7 @@ func GitHubCallback(ctx iris.Context) {
 	var accountOauth db.AccountOauth
 	if err := db.Driver.
 		Where("model = ? and open_id = ?", accountEnums.OauthGitHub, strconv.Itoa(int(*userInfo.ID))).
-		First(&accountOauth).Error; err != nil || accountOauth.Id == 0 {
+		First(&accountOauth).Error; err != nil {
 		// 找不到这个账户并且想绑定则直接绑定
 		if jwt.Type == accountEnums.GitHubBinding {
 			if jwt.AccountId == 0 {

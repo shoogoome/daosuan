@@ -28,7 +28,7 @@ func NewProductLogic(auth authbase.DaoSuanAuthAuthorization, pid ...int) Product
 	var product db.Product
 	if len(pid) > 0 {
 		table := db.Driver.Preload("Author")
-		if err := db.Driver.GetOne("product", pid[0], &product, table); err != nil || product.Id == 0 {
+		if err := db.Driver.GetOne("product", pid[0], &product, table); err != nil {
 			panic(productException.ProductIsNotExists())
 		}
 		db.Driver.Model(&product).Related(&(product.Tag), "Tag")
@@ -73,7 +73,7 @@ func (p *ProductLogic) GetProductInfo() interface{} {
 
 func (p *ProductLogic) VersionIsExists(versionName string) bool {
 	var t db.ProductVersion
-	if err := db.Driver.Where("product_id = ? and version_name = ?", p.product.Id, versionName).First(&t).Error; err != nil || t.Id == 0 {
+	if err := db.Driver.Where("product_id = ? and version_name = ?", p.product.Id, versionName).First(&t).Error; err != nil {
 		return false
 	}
 	return true
@@ -96,7 +96,7 @@ func (p *ProductLogic) IsStar() bool {
 	}
 
 	var star db.AccountStar
-	if err := db.Driver.Where("product_id = ? and account_id = ?", p.product.Id, p.auth.AccountModel().Id).First(&star).Error; err != nil || star.Id == 0 {
+	if err := db.Driver.Where("product_id = ? and account_id = ?", p.product.Id, p.auth.AccountModel().Id).First(&star).Error; err != nil {
 		return false
 	}
 	v := hash.RandInt64(240, 240 * 5)
@@ -154,7 +154,7 @@ func IskNameExists(name string) bool {
 	}
 
 	var t db.Product
-	if err := db.Driver.Where("name = ?", name).First(&t).Error; err != nil || t.Id == 0 {
+	if err := db.Driver.Where("name = ?", name).First(&t).Error; err != nil  {
 		return false
 	}
 	v := hash.RandInt64(240, 240*5)

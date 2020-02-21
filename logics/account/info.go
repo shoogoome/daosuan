@@ -33,7 +33,7 @@ func NewAccountLogic(auth authbase.DaoSuanAuthAuthorization, aid ...int) Account
 	var account db.Account
 
 	if len(aid) > 0 {
-		if err := db.Driver.GetOne("account", aid[0], &account); err != nil || account.Id == 0 {
+		if err := db.Driver.GetOne("account", aid[0], &account); err != nil {
 			panic(accountException.AccountIsNotExists())
 		}
 	} else {
@@ -170,7 +170,7 @@ func IsNicknameExists(nickname string) bool {
 	}
 
 	var account db.Account
-	if err := db.Driver.Where("nickname = ?", nickname).First(&account).Error; err != nil || account.Id == 0 {
+	if err := db.Driver.Where("nickname = ?", nickname).First(&account).Error; err != nil {
 		return false
 	}
 	v := hash.RandInt64(240, 240*5)
