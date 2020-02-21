@@ -5,6 +5,7 @@ import (
 	"daosuan/core/cache"
 	accountException "daosuan/exceptions/account"
 	"daosuan/utils/hash"
+	"daosuan/utils/log"
 	mailUtils "daosuan/utils/mail"
 	paramsUtils "daosuan/utils/params"
 	"github.com/kataras/iris"
@@ -30,6 +31,7 @@ func SendMail(ctx iris.Context) {
 
 	token := hash.GetRandomString(6)
 	if err := mailUtils.Send(token, target); err != nil {
+		logUtils.Println(err)
 		panic(accountException.EmailSendFail())
 	}
 	if err := cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.AccountVerificationEmail, target), []byte(token), 60 * 60 * 2); err != nil {
