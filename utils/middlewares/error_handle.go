@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"daosuan/models"
+	"daosuan/utils/log"
 	"fmt"
 	"github.com/kataras/iris"
 	"runtime"
@@ -19,6 +20,9 @@ func AbnormalHandle(ctx iris.Context) {
 		if debug, err := ctx.URLParamInt("debug"); err == nil && debug == 1 {
 			ctx.Text(fmt.Sprintf("%v\n%s", re, stack()))
 			return
+		// 若无显示要求则写入日志
+		} else {
+			logUtils.Println(fmt.Sprintf("%v\n%s", re, stack()))
 		}
 		// 输出api格式反馈
 		switch result := re.(type) {

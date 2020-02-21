@@ -43,6 +43,9 @@ type server struct {
 
 	// 任务队列长度
 	TaskQueueLength int `json:"task_queue_length" yaml:"task_queue_length"`
+
+	// 邮箱服务配置
+	Mail mail `json:"mail" yaml:"mail"`
 }
 
 type mysql struct {
@@ -148,4 +151,16 @@ type github struct {
 type wechat struct {
 
 	OauthClient wechat2.WeCharClient
+}
+
+type mail struct {
+
+	// 邮箱服务地址
+	SmtpHost string `json:"smtp_host" yaml:"smtp_host"`
+
+	// 账号
+	Username string `json:"username" yaml:"username"`
+
+	// 密码
+	Password string `json:"password" yaml:"password"`
 }

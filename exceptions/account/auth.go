@@ -24,6 +24,6 @@ func OauthVerificationFail() models.RestfulAPIResult {
 	return models.RestfulAPIResult{
 		Status: false,
 		ErrCode: 5302,
-		Message: "验证失败",
+		Message: "验证码错误",
 	}
 }
