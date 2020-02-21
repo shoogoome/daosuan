@@ -41,5 +41,4 @@ func RegisterAccountRouters(app *iris.Application) {
 
 	// mail
 	accountRouter.Get("/v/email/send", hero.Handler(account.SendMail))
-
 }

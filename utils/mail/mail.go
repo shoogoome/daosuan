@@ -6,11 +6,11 @@ import (
 	"github.com/go-gomail/gomail"
 )
 
-func Send(target string, token string) error {
+func Send(token string, target ...string) error {
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", utils.GlobalConfig.Server.Mail.Username)
-	m.SetHeader("To", target)
+	m.SetHeader("To", target...)
 
 	m.SetHeader("Subject", "捣蒜官方邮件")
 	m.SetBody("text/html", generateBody(token))
