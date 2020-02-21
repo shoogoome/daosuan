@@ -17,12 +17,11 @@ func AbnormalHandle(ctx iris.Context) {
 		}
 		ctx.StatusCode(iris.StatusInternalServerError)
 		// 打印堆栈信息
+		log := fmt.Sprintf("%v\n%s", re, stack())
+		logUtils.Println(log)
 		if debug, err := ctx.URLParamInt("debug"); err == nil && debug == 1 {
-			ctx.Text(fmt.Sprintf("%v\n%s", re, stack()))
+			ctx.Text(log)
 			return
-		// 若无显示要求则写入日志
-		} else {
-			logUtils.Println(fmt.Sprintf("%v\n%s", re, stack()))
 		}
 		// 输出api格式反馈
 		switch result := re.(type) {
