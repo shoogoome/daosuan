@@ -14,7 +14,7 @@ func EmailSendFail() models.RestfulAPIResult {
 	return models.RestfulAPIResult{
 		Status: false,
 		ErrCode: 5311,
-		Message: "邮箱发送失败， 检查目标有限是否存在或稍后再试",
+		Message: "邮箱发送失败， 检查目标邮箱是否存在或稍后再试",
 	}
 }
 
