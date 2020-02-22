@@ -8,7 +8,7 @@ import (
 )
 
 // 解除第三方绑定
-func UnBind(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
+func UnBindOauth(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	auth.CheckLogin()
 
 	model, err := ctx.URLParamInt("model")

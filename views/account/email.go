@@ -2,8 +2,10 @@ package account
 
 import (
 	"daosuan/constants"
+	"daosuan/core/auth"
 	"daosuan/core/cache"
 	accountException "daosuan/exceptions/account"
+	"daosuan/models/db"
 	"daosuan/utils/hash"
 	"daosuan/utils/log"
 	mailUtils "daosuan/utils/mail"
@@ -41,5 +43,33 @@ func SendMail(ctx iris.Context) {
 	cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.AccountVerificationEmailTime, ip), []byte(ip), 60)
 	ctx.JSON(iris.Map {
 		"status": "success",
+	})
+}
+
+// 验证邮箱
+func VerificationMail(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
+	auth.CheckLogin()
+
+	params := paramsUtils.NewParamsParser(paramsUtils.RequestJsonInterface(ctx))
+
+	email := params.Str("email", "邮箱")
+	token := params.Str("token", "验证码")
+
+	if re, err := cache.Dijan.Get(paramsUtils.CacheBuildKey(constants.AccountVerificationEmail, email)); err == nil && re != nil {
+		if token != string(re) {
+			panic(accountException.OauthVerificationFail())
+		}
+	} else {
+		panic(accountException.OauthVerificationFail())
+	}
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountVerificationEmail, email))
+
+	account := auth.AccountModel()
+	account.Email = email
+	account.EmailValidated = true
+	db.Driver.Save(&account)
+
+	ctx.JSON(iris.Map {
+		"id": account.Id,
 	})
 }
