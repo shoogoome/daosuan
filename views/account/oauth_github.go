@@ -71,7 +71,7 @@ func GitHubCallback(ctx iris.Context) {
 	userInfo, _, err := client.Users.Get(context.Background(), "")
 
 	if err != nil || userInfo == nil {
-		logUtils.Println("错误2")
+		logUtils.Println("错误2", err)
 		ctx.Redirect(utils.GlobalConfig.Oauth.GitHub.ErrorUrl, http.StatusFound)
 		return
 	}
