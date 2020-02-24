@@ -6,6 +6,7 @@ import (
 	accountLogic "daosuan/logics/account"
 	"daosuan/models/db"
 	"daosuan/utils/hash"
+	"daosuan/utils/mail"
 	paramsUtils "daosuan/utils/params"
 	"github.com/kataras/iris"
 )
@@ -17,8 +18,9 @@ func CommonLogin(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 	params := paramsUtils.NewParamsParser(data)
 
 	var account db.Account
-	// function - 2 邮箱   - 1 电话
-	if function, err := ctx.URLParamInt("function"); err == nil && function == 1 {
+
+	key := params.Str("key", "帐号")
+	if !mailUtils.CheckMailFormat(key) {
 		db.Driver.Where(
 			"password = ? and phone = ? and phone_validated = true",
 			hash.PasswordSignature(params.Str("password", "密码")),

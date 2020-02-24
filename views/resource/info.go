@@ -31,7 +31,7 @@ func LocalDownload(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, tok
 	disposition.Write([]byte("; filename=" + nFileName))
 
 	split := strings.Split(nFileName, ".")
-	mime, ok := constants.MimeToExtMapping[split[len(split)-1]];
+	mime, ok := constants.MimeToExtMapping[split[len(split)-1]]
 	if !ok {
 		mime = "application/octet-stream"
 	}
