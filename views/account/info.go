@@ -1,7 +1,9 @@
 package account
 
 import (
+	"daosuan/constants"
 	authbase "daosuan/core/auth"
+	"daosuan/core/cache"
 	"daosuan/enums/account"
 	accountException "daosuan/exceptions/account"
 	accountLogic "daosuan/logics/account"
@@ -93,6 +95,8 @@ func PutAccount(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid in
 	if err := db.Driver.Where("nickname = ? and id != ?", account.Nickname, account.Id).First(&a).Error; err == nil && account.Id != 0 {
 		panic(accountException.NicknameExists())
 	}
+	// 清除昵称缓存
+	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.NicknameModel, account.Nickname))
 	account.Motto = params.Str("motto", "一句话签名")
 
 	if params.Has("role") && auth.IsAdmin() {
