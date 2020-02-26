@@ -17,7 +17,6 @@ func Dashboard(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, aid int
 		"followers": logic.GetFollowers(),
 		"product": logic.GetProduct(),
 		"stars": logic.GetStars(),
-		"oauth": logic.GetOauth(),
 	})
 }
 

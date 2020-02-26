@@ -58,8 +58,9 @@ func (a *AccountLogic) GetAccountInfo() interface{} {
 	if len(a.account.Avator) > 0 {
 		a.account.Avator = resourceLogic.GenerateToken(a.account.Avator, -1, -1)
 	}
-
-	return paramsUtils.ModelToDict(a.account, field)
+	data := paramsUtils.ModelToDict(a.account, field)
+	data["oauth"] = a.GetOauth()
+	return data
 }
 
 // 获取关注的人
