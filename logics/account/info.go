@@ -4,6 +4,7 @@ import (
 	"daosuan/constants"
 	authbase "daosuan/core/auth"
 	"daosuan/core/cache"
+	"daosuan/enums/account"
 	"daosuan/exceptions/account"
 	"daosuan/logics/resource"
 	"daosuan/models/db"
@@ -146,17 +147,26 @@ func (a *AccountLogic) GetProduct() []dto.ProductList {
 }
 
 // 获取已验证的第三方
-func (a *AccountLogic) GetOauth() []int {
+func (a *AccountLogic) GetOauth() map[int]string {
 
-	var oauth []int
+	oauth := make(map[int]string)
 	if rows, err := db.Driver.
 		Table("account_oauth").
 		Where("account_id = ?", a.account.Id).
-		Select("model").Rows(); err == nil {
+		Select("model, user_info").Rows(); err == nil {
 			for rows.Next() {
 				var model int
-				if err := rows.Scan(&model); err == nil {
-					oauth = append(oauth, model)
+				var userInfo string
+				if err := rows.Scan(&model, &userInfo); err == nil {
+					var user interface{}
+					if err := json.Unmarshal([]byte(userInfo), &user); err == nil {
+						switch model {
+						case accountEnums.OauthGitHub:
+							oauth[model] = user.(map[string]interface{})["login"].(string)
+						case accountEnums.OauthWeChat:
+							oauth[model] = ""
+						}
+					}
 				}
 			}
 	}
