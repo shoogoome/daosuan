@@ -18,7 +18,7 @@ func RegisterAccountRouters(app *iris.Application) {
 	accountRouter.Post("/_mget", hero.Handler(account.MgetAccountInfo))
 	accountRouter.Post("/register/email", hero.Handler(account.EmailRegister))
 	accountRouter.Get("/logout", hero.Handler(account.Logout))
-	accountRouter.Post("/unbind/oauth", hero.Handler(account.UnBindOauth))
+	accountRouter.Get("/unbind/oauth", hero.Handler(account.UnBindOauth))
 	accountRouter.Post("/login/common", hero.Handler(account.CommonLogin))
 	accountRouter.Get("/{aid:int}", hero.Handler(account.GetAccount))
 	accountRouter.Put("/{aid:int}", hero.Handler(account.PutAccount))
