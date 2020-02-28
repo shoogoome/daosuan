@@ -82,7 +82,7 @@ func (a *AccountLogic) GetFollowing() []follow {
 		Find(&follow)
 	for i := 0; i < len(follow); i++ {
 		if len(follow[i].Avator) > 0 {
-			follow[i].Avator = resourceLogic.GenerateToken(a.account.Avator, -1, -1)
+			follow[i].Avator = resourceLogic.GenerateToken(follow[i].Avator, -1, -1)
 		}
 	}
 	if payload, err := json.Marshal(follow); err == nil {
@@ -109,7 +109,7 @@ func (a *AccountLogic) GetFollowers() []follow {
 		Find(&follow)
 	for i := 0; i < len(follow); i++ {
 		if len(follow[i].Avator) > 0 {
-			follow[i].Avator = resourceLogic.GenerateToken(a.account.Avator, -1, -1)
+			follow[i].Avator = resourceLogic.GenerateToken(follow[i].Avator, -1, -1)
 		}
 	}
 	if payload, err := json.Marshal(follow); err == nil {
