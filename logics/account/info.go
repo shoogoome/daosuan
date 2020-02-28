@@ -23,6 +23,7 @@ type follow struct {
 	Id       int    `json:"id"`
 	Nickname string `json:"nickname"`
 	Motto    string `json:"motto"`
+	Avator   string `json:"avator"`
 }
 
 type AccountLogic struct {
@@ -77,8 +78,13 @@ func (a *AccountLogic) GetFollowing() []follow {
 	db.Driver.
 		Table("account_follow as f, account as a").
 		Where("f.source_id = ? and a.id = f.target_id", a.account.Id).
-		Select("a.id, a.nickname, a.motto").
+		Select("a.id, a.nickname, a.motto, a.avator").
 		Find(&follow)
+	for i := 0; i < len(follow); i++ {
+		if len(follow[i].Avator) > 0 {
+			follow[i].Avator = resourceLogic.GenerateToken(a.account.Avator, -1, -1)
+		}
+	}
 	if payload, err := json.Marshal(follow); err == nil {
 		v := hash.RandInt64(240, 240*5)
 		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowingModel, a.account.Id), payload, int(v)*60*60)
@@ -99,8 +105,13 @@ func (a *AccountLogic) GetFollowers() []follow {
 	db.Driver.
 		Table("account_follow as f, account as a").
 		Where("f.target_id = ? and a.id = f.source_id", a.account.Id).
-		Select("a.id, a.nickname, a.motto").
+		Select("a.id, a.nickname, a.motto, a.avator").
 		Find(&follow)
+	for i := 0; i < len(follow); i++ {
+		if len(follow[i].Avator) > 0 {
+			follow[i].Avator = resourceLogic.GenerateToken(a.account.Avator, -1, -1)
+		}
+	}
 	if payload, err := json.Marshal(follow); err == nil {
 		v := hash.RandInt64(240, 240*5)
 		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.FollowerModel, a.account.Id), payload, int(v)*60*60)
@@ -141,7 +152,7 @@ func (a *AccountLogic) GetProduct() []dto.ProductList {
 
 	if payload, err := json.Marshal(lists); err == nil {
 		v := hash.RandInt64(240, 240*5)
-		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.AccountProductModel, a.account.Id), payload, int(v) * 60 * 60)
+		cache.Dijan.Set(paramsUtils.CacheBuildKey(constants.AccountProductModel, a.account.Id), payload, int(v)*60*60)
 	}
 	return lists
 }
@@ -154,25 +165,24 @@ func (a *AccountLogic) GetOauth() map[int]string {
 		Table("account_oauth").
 		Where("account_id = ?", a.account.Id).
 		Select("model, user_info").Rows(); err == nil {
-			for rows.Next() {
-				var model int
-				var userInfo string
-				if err := rows.Scan(&model, &userInfo); err == nil {
-					var user interface{}
-					if err := json.Unmarshal([]byte(userInfo), &user); err == nil {
-						switch model {
-						case accountEnums.OauthGitHub:
-							oauth[model] = user.(map[string]interface{})["login"].(string)
-						case accountEnums.OauthWeChat:
-							oauth[model] = ""
-						}
+		for rows.Next() {
+			var model int
+			var userInfo string
+			if err := rows.Scan(&model, &userInfo); err == nil {
+				var user interface{}
+				if err := json.Unmarshal([]byte(userInfo), &user); err == nil {
+					switch model {
+					case accountEnums.OauthGitHub:
+						oauth[model] = user.(map[string]interface{})["login"].(string)
+					case accountEnums.OauthWeChat:
+						oauth[model] = ""
 					}
 				}
 			}
+		}
 	}
 	return oauth
 }
-
 
 // 检测昵称是否存在
 func IsNicknameExists(nickname string) bool {
