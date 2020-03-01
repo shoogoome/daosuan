@@ -2,7 +2,6 @@ package elasticsearch
 
 import (
 	"bytes"
-	"daosuan/utils/log"
 	"encoding/json"
 )
 
@@ -46,14 +45,11 @@ func newGlobalSearchBody(key string, conf ...Config) *bytes.Buffer {
 		}
 		body["query"].(dict)["bool"].(dict)["filter"] = filter
 		// 字段展示过滤
-		//body["_source"] = conf[0].source
+		body["_source"] = conf[0].source
 		// 字段匹配
 		if len(key) > 0 {
 			body["query"].(dict)["bool"].(dict)["must"].([]dict)[0]["multi_match"].(dict)["fields"] = conf[0].fields
 		}
-	}
-	if re, err := json.MarshalIndent(body, "", "\t"); err == nil {
-		logUtils.Println(string(re))
 	}
 
 	if re, err := json.Marshal(body); err == nil {
