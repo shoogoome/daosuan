@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"daosuan/models"
-	"daosuan/utils/log"
+	logUtils "daosuan/utils/log"
 	"fmt"
 	"github.com/kataras/iris"
 	"runtime"
@@ -18,7 +18,6 @@ func AbnormalHandle(ctx iris.Context) {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		// 打印堆栈信息
 		log := fmt.Sprintf("%v\n%s", re, stack())
-		logUtils.Println(log)
 		if debug, err := ctx.URLParamInt("debug"); err == nil && debug == 1 {
 			ctx.Text(log)
 			return
@@ -33,6 +32,7 @@ func AbnormalHandle(ctx iris.Context) {
 				ErrCode: 500,
 				Message: fmt.Sprintf("系统错误: %v", result),
 			})
+			logUtils.Println(log)
 		}
 	}()
 	ctx.Next()
