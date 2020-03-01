@@ -64,6 +64,8 @@ func GlobalSearch(_index, key string, conf ...Config) map[string]interface{} {
 		payload)
 
 	if response.StatusCode != http.StatusOK {
+		a, _ := ioutil.ReadAll(response.Body)
+		logUtils.Println(string(a), payload.String())
 		panic(productException.SearchFail())
 	}
 
@@ -84,18 +86,20 @@ func GlobalSearch(_index, key string, conf ...Config) map[string]interface{} {
 				// 本体数据
 				result["result"] = append(result["result"].([]dict), hit.(map[string]interface{})["_source"].(map[string]interface{}))
 				// 替换高亮数据
-				for key, value := range hit.(map[string]interface{})["highlight"].(map[string]interface{}) {
-					// 替换字符串类型
-					target := result["result"].([]dict)[index][key]
-					if t, ok := target.(string); ok {
-						// 每条高亮语句逐一替换
-						for _, k := range value.([]interface{}) {
-							lk := strings.Replace(k.(string), "</em>", "", -1)
-							lk = strings.Replace(lk, "<em>", "", -1)
-							t = strings.Replace(t, lk, k.(string), -1)
+				if v, ok := hit.(map[string]interface{})["highlight"].(map[string]interface{}); ok {
+					for key, value := range v {
+						// 替换字符串类型
+						target := result["result"].([]dict)[index][key]
+						if t, ok := target.(string); ok {
+							// 每条高亮语句逐一替换
+							for _, k := range value.([]interface{}) {
+								lk := strings.Replace(k.(string), "</em>", "", -1)
+								lk = strings.Replace(lk, "<em>", "", -1)
+								t = strings.Replace(t, lk, k.(string), -1)
+							}
+							// 替换原数据
+							result["result"].([]dict)[index][key] = t
 						}
-						// 替换原数据
-						result["result"].([]dict)[index][key] = t
 					}
 				}
 			}

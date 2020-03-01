@@ -12,7 +12,6 @@ import (
 	"daosuan/logics/product"
 	resourceLogic "daosuan/logics/resource"
 	"daosuan/models/db"
-	"daosuan/models/dto"
 	"daosuan/utils/durl"
 	"daosuan/utils/params"
 	"encoding/json"
@@ -147,55 +146,36 @@ func DeleteProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid
 // 获取产品列表
 func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 
-	var lists []dto.ProductList
-	var count int
-	table := db.Driver.Table("product as p")
-	// 可看自己产品的所有状态产品列表
-	if me, err := ctx.URLParamBool("me"); err == nil && me {
-		table = table.Where("p.author_id = ?", auth.AccountModel().Id)
-		// 非系统管理员则只能看发布状态的产品列表
-	} else if !auth.IsAdmin() {
-		table = table.Where("p.status = ?", productEnums.StatusReleased)
-	}
 	limit := ctx.URLParamIntDefault("limit", 10)
 	page := ctx.URLParamIntDefault("page", 1)
+	config := elasticsearch.NewProductSearchConfig(limit * (page - 1), limit)
+
+	// 可看自己产品的所有状态产品列表
+	if me, err := ctx.URLParamBool("me"); err == nil && me {
+		config.AddFilter("author.id",  auth.AccountModel().Id)
+		// 非系统管理员则只能看发布状态的产品列表
+	} else if !auth.IsAdmin() {
+		config.AddFilter("status", productEnums.StatusReleased)
+	}
 
 	// 条件过滤
-	// TODO elasticsearch 分词搜索
-	if q := ctx.URLParam("q"); len(q) > 0 {
-		config := elasticsearch.NewProductSearchConfig(limit * (page - 1), limit)
-		ctx.JSON(elasticsearch.GlobalSearch("product", q, config))
-		return
-	}
-	if name := ctx.URLParam("name"); len(name) > 0 {
-		nameString := fmt.Sprintf("%%%s%%", name)
-		table = table.Where("name like ?", nameString)
-	}
 	if author, err := ctx.URLParamInt("author_id"); err == nil {
-		table = table.Where("author_id = ?", author)
+		config.AddFilter("author.id", author)
 	}
 	if status, err := ctx.URLParamInt("status"); err == nil && auth.IsAdmin() {
-		table = table.Where("status = ?", status)
+		config.AddFilter("status", status)
 	}
 	if tag := ctx.URLParam("tag"); len(tag) > 0 {
 		tagList := strings.Split(tag, ",")
-		table = table.Table("product as p, product_tags as t")
-		table = table.Where("t.product_id = p.id and t.tag_id in (?)", tagList)
+		config.AddFilter("tag.id", tagList)
 	}
 
-	table.Count(&count).Offset((page - 1) * limit).
-		Limit(limit).
-		Select("distinct p.id, p.update_time, p.cover, p.create_time, p.description, p.name, p.status, p.star").
-		Order("update_time desc").Find(&lists)
-	for i := 0; i < len(lists); i++ {
-		lists[i].Cover = resourceLogic.GenerateToken(lists[i].Cover, -1, -1)
+	lists := elasticsearch.GlobalSearch("product", ctx.URLParam("name"), config)
+
+	for i := 0; i < len(lists["result"].([]map[string]interface{})); i++ {
+		lists["result"].([]map[string]interface{})[i]["cover"] = resourceLogic.GenerateToken(lists["result"].([]map[string]interface{})[i]["cover"].(string), -1, -1)
 	}
-	ctx.JSON(iris.Map{
-		"products": lists,
-		"total":    count,
-		"limit":    limit,
-		"page":     page,
-	})
+	ctx.JSON(lists)
 }
 
 // 批量获取产品信息
