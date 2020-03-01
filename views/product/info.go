@@ -170,7 +170,7 @@ func GetProductList(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization) {
 		config.AddFilter("tag.id", tagList)
 	}
 
-	lists := elasticsearch.GlobalSearch("product", ctx.URLParam("name"), config)
+	lists := elasticsearch.GlobalSearch("product", ctx.URLParam("key"), config)
 
 	for i := 0; i < len(lists["result"].([]map[string]interface{})); i++ {
 		lists["result"].([]map[string]interface{})[i]["cover"] = resourceLogic.GenerateToken(lists["result"].([]map[string]interface{})[i]["cover"].(string), -1, -1)
