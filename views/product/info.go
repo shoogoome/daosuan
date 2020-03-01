@@ -133,11 +133,11 @@ func DeleteProduct(ctx iris.Context, auth authbase.DaoSuanAuthAuthorization, pid
 	if err := db.Driver.Delete(product).Error; err == nil {
 		// 删除所有版本
 		db.Driver.Exec("delete from `product_version` where product_id = ?", pid)
+		// 删除索引
+		elasticsearch.Delete("product", "root", product.Id)
 	}
 	// 删除缓存
 	cache.Dijan.Del(paramsUtils.CacheBuildKey(constants.AccountProductModel, auth.AccountModel().Id))
-	// 删除索引
-	elasticsearch.Delete("product", "root", product.Id)
 	ctx.JSON(iris.Map{
 		"id": pid,
 	})
