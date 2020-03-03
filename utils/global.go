@@ -35,9 +35,9 @@ func InitGlobal() {
 
 	// 初始化wechat oauth配置
 	GlobalConfig.Oauth.WeChat.OauthClient = wechat.WeCharClient{
-		Appid:       "wxbbf5d0d2fe30d53d",
-		Secret:      "6e93d09a9eccb23ca520b9fe16a8ff6d",
-		RedirectUri: "http://api.v1.daosuan.net/accounts/oauth/wechat/callback",
+		Appid:       "xxxx",
+		Secret:      "xxx",
+		RedirectUri: "xxxxx",
 		Scope:       []string{"snsapi_login"},
 	}
 }
